@@ -14,11 +14,11 @@ If the value is set outside of this range, it will be overwriten with the closes
 *   **Closing Gas Delay (ms)**: Delay for the closing of the gas valve after the laser has turend off. Absolute range is $[0, 3000]$ ms, recomended range is $[200, 500]$ ms
 *   **Welding wire delay (ms)**: Wire feeding advance time relative to the light emitting signal. Absolute range is $[0, 3000]$ ms, recomended range is $[200, 500]$ ms
 *   **Scan correction**: Scanning correction coeficient given by
-$$
 
+$$
 \textrm{Scan correction} = \frac{\textrm{Target Linewidth}}{\textrm{Measured Linewidth}}
-
 $$
+
 Absolute range is $[0.01, 4]$
 *   **Laser center offset (mm)**: Laser centering offset. Absolute range is $[-3, 3]$ mm (negative implies offset to the left)
 *   **Motor drive temperature threshold (ºC)**: Min/max value of the motor's drive temperature for the alarm, depending if the alarm is set to low/high level
