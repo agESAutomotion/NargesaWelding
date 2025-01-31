@@ -15,7 +15,9 @@ If the value is set outside of this range, it will be overwriten with the closes
 *   **Welding wire delay (ms)**: Wire feeding advance time relative to the light emitting signal. Absolute range is $[0, 3000]$ ms, recomended range is $[200, 500]$ ms
 *   **Scan correction**: Scanning correction coeficient given by
 $$
+
 \textrm{Scan correction} = \frac{\textrm{Target Linewidth}}{\textrm{Measured Linewidth}}
+
 $$
 Absolute range is $[0.01, 4]$
 *   **Laser center offset (mm)**: Laser centering offset. Absolute range is $[-3, 3]$ mm (negative implies offset to the left)
@@ -27,7 +29,7 @@ Absolute range is $[0.01, 4]$
 *   **Pressure alarm level**: TBD
 
 ## Laser Power Curve
-![LaserPowerCurve](.\LaserPowerCurve.png)
+![LaserPowerCurve](./LaserPowerCurve.png)
 
 *   **Laser Power (W)**: Stable power after the progressive ON time
 *   **Peak Power (W)**: must be less that or equal to the `Laser Power` parameter
