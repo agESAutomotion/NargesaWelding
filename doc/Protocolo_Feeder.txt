@@ -1,0 +1,583 @@
+NOTA: Visualizacion del archivo con tamaño de tabuladores a 4
+
+===============================================================================
+COMUNICACIÓN DE PANTALLA (MASTER )A CPU (SLAVE)
+===============================================================================
+
+-------------------------------------------------------------------------------
+CONFIGURACION DE LA COMUNICACION
+-------------------------------------------------------------------------------
+COMUNICACION: RS232
+BAUDRATE:     115200 baudios
+
+8N1:          1 bit de Start
+			  1 bit de Stop
+			  8 bits de datos
+  			  Sin paridad
+
+-------------------------------------------------------------------------------
+PATRONES DE LAS TRAMAS
+-------------------------------------------------------------------------------
+
+COMANDO   -> |0x5a|0xa5|0xXX|0x83|0xXX|0xXX|0xXX|...|
+              --------- ---- ---- --------- ---- ---
+                  |       |    |      |       |   |-> Parametros (cada parametro ocupa 2 bytes) 
+				  |       |    |      |       |-> Numero de parametros
+				  |       |    |      |-> Direccion ???
+				  |       |    |-> Comando
+				  |       |-> Numero de bytes de la trama a partir de aqui
+				  |-> Inicio de trama
+
+RESPUESTA -> |0x5a|0xa5|0xXX|0x82|0xXX|0xXX|...|
+              --------- ---- ---- --------- ---
+                  |       |    |      |      |-> Parametros (cada parametro ocupa 2 bytes) 
+				  |       |    |      |-> Direccion ???
+				  |       |    |-> Respuesta (Al arrancar, algunas tramas contienen un 0x83 en la respuesta, en lugar de un 0x82)
+				  |       |-> Numero de bytes de la trama a partir de aqui
+				  |-> Inicio de trama
+
+-------------------------------------------------------------------------------
+SISTEMA DE ALIMENTACION DE HILO DE SOLDADURA POR LASER
+-------------------------------------------------------------------------------
+
+Al dar alimentacion a la placa
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x20|0x02|0x01|0x00|0x03|
+	             |0x5a|0xa5|0x06|0x83|0x20|0x08|0x01|0x00|0x13|
+	
+	RESPUESTA -> |0x5a|0xa5|0x04|0x83|0x20|0x02|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x02|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x02|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x02|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x02|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x02|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x02|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x02|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x08|0x01|
+				 |0x5a|0xa5|0x07|0x82|0x10|0x01|0x00|0x01|0x00|0x00|
+				 
+				 |0x5a|0xa5|0x0f|0x82|0x10|0x05|0x00|0xc8|0x02|0x58|0x01|0x2d|0x00|0x33|0x00|0x0a|0x00|0x0a|
+				                                --------- --------- --------- --------- --------- ---------
+													|         |         |         |         |         |-> Retardo de subprocesos en ms
+													|         |         |         |         |-> La duracion de la reduccion en mm
+													|         |         |         |-> Retraso en el inicio en ms
+													|         |         |-> Velocidad de devolucion manual en cm/min
+													|         |-> Velocidad de alimentacion manual del cable en cm/min
+													|-> Velocidad de alimentacion del cable en cm/min
+				 
+				 |0x5a|0xa5|0x27|0x82|0x10|0x0c|0x00|0x02|0x00|0x01|0x00|0x64|0x03|0x20|0x00|0x09|0x00|0xc8|0x00|0x1e|0x00|0x3b|0x00|0x00|0x00|0x01|
+				                                          --------- --------- --------- --------- --------- --------- ---------           ---------
+															  |         |         |         |	      |         |         |                   |-> Modo continuo / Modo de pulso
+															  |         |         |         |	      |         |         |                       |0x00|0x00| -> Modo continuo
+															  |         |         |         |	      |         |         |                       |0x00|0x01| -> Modo de pulso
+															  |         |         |         |	      |         |         |-> Promedio en cm/min
+															  |         |         |         |	      |         |-> Lisura en %
+															  |         |         |         |	      |-> Periodo de pulso en ms
+															  |         |         |         |-> Idioma
+															  |         |         |             |0x00|0x00| -> Chino
+															  |         |         |             |0x00|0x01| -> Ingles
+															  |         |         |             |0x00|0x04| -> Coreano
+															  |         |         |             |0x00|0x05| -> Ruso
+															  |         |         |             |0x00|0x02| -> Chino tradicional
+															  |         |         |             |0x00|0x03| -> Japones
+															  |         |         |             |0x00|0x06| -> Aleman
+															  |         |         |             |0x00|0x07| -> Frances
+															  |         |         |             |0x00|0x08| -> Italiano
+															  |         |         |             |0x00|0x09| -> Español
+															  |         |         |             |0x00|0x0a| -> Portugues
+															  |         |         |             |0x00|0x0b| -> Turco
+															  |         |         |             |0x00|0x0c| -> Griego
+															  |         |         |             |0x00|0x0d| -> Checo
+															  |         |         |             |0x00|0x0e| -> Eslovaco
+															  |         |         |             |0x00|0x0f| -> Polaco
+															  |         |         |             |0x00|0x10| -> Tailandes
+															  |         |         |             |0x00|0x11| -> Vietnamita
+															  |         |         |             |0x00|0x12| -> Rumano
+															  |         |         |-> Segunda parte de "Version del sistema"
+															  |         |-> Primera parte de "Version del sistema"
+															  |-> Longitud de filigrana en ms
+
+				 
+				 |0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x0a|0x00|0x0a|0x00|0x0a|
+				  --------- ---------                     --------- --------- ---------
+				      |         |                             |         |         |-> Longitud de filigrana B en mm
+				      |         |                             |         |-> Longitud de filigrana A en mm
+                      |         |                             |-> Motor electrico seleccionado
+                      |         |                                 |0x00|0x00| -> Motor A
+                      |         |                                 |0x00|0x01| -> Motor B
+                      |         |                                 |0x00|0x02| -> Motor A&B
+					  |         |-> Balance de velocidad A en cm/min
+					  |-> Balance de velocidad B en cm/min
+				 
+				 + Misma respuesta que REF. 9
+				 + Misma respuesta que REF. 9
+	
+Pantalla principal -> Al poner el control del interruptor en "EN / OFF" de la "Señal de habilitacion de la alimentacion del cable"
+                      desde la pantalla "Diagnostico" del modo "Sistema de soldadura laser" de la placa SUP21T
+
+	COMANDO   -> No envia ninguna trama
+	
+	RESPUESTA -> |0x5a|0xa5|0x05|0x82|0x10|0x02|0x00|0x01|
+	                                            ---------
+												    |-> Señal de habilitacion de la alimentacion del cable
+													    |0x00|0x00| -> Control del interruptor en "OFF"
+														|0x00|0x01| -> Control del interruptor en "EN"
+
+Pantalla principal -> Al presionar los botones de "Motor electrico"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x1a|0x01|0x00|0x00|
+                                                     ---------
+                                                         |-> Motor electrico seleccionado
+                                                             |0x00|0x00| -> Motor A
+                                                             |0x00|0x01| -> Motor B
+                                                             |0x00|0x02| -> Motor A&B
+
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla principal -> Al fijar un valor en el Edit Box "Velocidad de alimentacion del cable (cm/min)" o
+                      al presionar la flecha "Up" situada a la derecha del Edit Box "Velocidad de alimentacion del cable (cm/min)" o
+					  al presionar la flecha "Down" situada a la derecha del Edit Box "Velocidad de alimentacion del cable (cm/min)"
+
+	REF. 1
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x05|0x01|0x00|0x0f|
+	                                                 ---------
+													     |-> Velocidad de alimentacion del cable en cm/min
+
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla principal -> Al presionar el boton "Modo continuo / Modo de pulso"
+
+	Nota: Al pasar a "Modo de pulso" aparecen los siguientes parametros en la parte superior de la pantalla.
+	
+	      Periodo de pulso
+		  Lisura
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x15|0x01|0x00|0x01|
+	                                                 ---------
+													     |-> Modo continuo / Modo de pulso
+														     |0x00|0x00| -> Modo continuo
+															 |0x00|0x01| -> Modo de pulso
+
+	REF. 9
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x48|
+				                                          ---------
+														      |-> Este parametro cambia en funcion de "Modo continuo" o "Modo de pulso"
+															      |0x00|0x48| -> Modo de pulso
+																  |0x00|0x43| -> Modo continuo
+
+Pantalla principal -> Al presionar el boton "Construir"
+
+	No envia ninguna trama
+
+Pantalla principal -> Al presionar / soltar el boton redondo "Alimentacion manual de alambre"
+
+	Nota: Este comando solo envia una trama al presionar el boton y otra al soltarlo. No envia tramas continuamente.
+	
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x03|0x01|0x00|0x01|
+	                                                 ---------
+													     |-> Cambio de estado del boton "Alimentacion manual de alambre"
+														     |0x00|0x01| -> Al presionar el boton
+															 |0x00|0x00| -> Al soltar el boton
+
+	(al presionar el boton)
+	RESPUESTA -> No recibe ninguna trama
+	
+	(al soltar el boton)
+	REF. 10
+	RESPUESTA -> |0x5a|0xa5|0x05|0x82|0x10|0x02|0x00|0x00|
+
+Pantalla principal -> Al presionar / soltar el boton redondo "Inconveniente manual"
+
+	Nota: Este comando solo envia una trama al presionar el boton y otra al soltarlo. No envia tramas continuamente.
+	
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x04|0x01|0x00|0x01|
+	                                                 ---------
+													     |-> Cambio de estado del boton "Inconveniente manual"
+														     |0x00|0x01| -> Al presionar el boton
+															 |0x00|0x00| -> Al soltar el boton
+
+	(al presionar el boton)
+	RESPUESTA -> No recibe ninguna trama
+	
+	(al soltar el boton)
+	RESPUESTA -> Misma respuesta que REF. 10
+
+Pantalla principal -> Al presionar los botones "Soldeo" y "Paro"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x01|0x01|0x00|0x01|
+	                                                 ---------
+													     |-> Control de "Soldeo / Paro"
+														     |0x00|0x01| -> Soldeo
+															 |0x00|0x00| -> Paro
+
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla de configuracion del modo continuo -> Al fijar un valor en el Edit Box "Velocidad de alimentacion del cable (cm/min)" o
+											   al presionar la flecha "Up" situada a la derecha del Edit Box "Velocidad de alimentacion del cable (cm/min)" o
+											   al presionar la flecha "Down" situada a la derecha del Edit Box "Velocidad de alimentacion del cable (cm/min)"
+
+	COMANDO   -> Mismo comando que REF. 1
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla de configuracion del modo continuo -> Al fijar un valor en el Edit Box "Retraso en el inicio (ms)" o
+											   al presionar la flecha "Up" situada a la derecha del Edit Box "Retraso en el inicio (ms)" o
+											   al presionar la flecha "Down" situada a la derecha del Edit Box "Retraso en el inicio (ms)"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x08|0x01|0x00|0x32|
+	                                                 ---------
+													     |-> Retraso en el inicio en ms
+
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla de configuracion del modo continuo -> Al fijar un valor en el Edit Box "La duracion de la reduccion (mm)" o
+											   al presionar la flecha "Up" situada a la derecha del Edit Box "La duracion de la reduccion (mm)" o
+											   al presionar la flecha "Down" situada a la derecha del Edit Box "La duracion de la reduccion (mm)"
+
+	REF. 2
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x09|0x01|0x00|0x0a|
+	                                                 ---------
+													     |-> La duracion de la reduccion en mm
+
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla de configuracion del modo continuo -> Al fijar un valor en el Edit Box "Longitud de filigrana (ms)" o
+											   al presionar la flecha "Up" situada a la derecha del Edit Box "Longitud de filigrana (ms)" o
+											   al presionar la flecha "Down" situada a la derecha del Edit Box "Longitud de filigrana (ms)"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x0d|0x01|0x00|0x02|
+	                                                 ---------
+													     |-> Longitud de filigrana en ms
+
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla de configuracion del modo continuo -> Al fijar un valor en el Edit Box "Velocidad de alimentacion manual del cable (cm/min)" o
+											   al presionar la flecha "Up" situada a la derecha del Edit Box "Velocidad de alimentacion manual del cable (cm/min)" o
+											   al presionar la flecha "Down" situada a la derecha del Edit Box "Velocidad de alimentacion manual del cable (cm/min)"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x06|0x01|0x02|0x58|
+	                                                 ---------
+													     |-> Velocidad de alimentacion manual del cable en cm/min
+
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla de configuracion del modo continuo -> Al fijar un valor en el Edit Box "Velocidad de devolucion manual (cm/min)" o
+											   al presionar la flecha "Up" situada a la derecha del Edit Box "Velocidad de devolucion manual (cm/min)" o
+											   al presionar la flecha "Down" situada a la derecha del Edit Box "Velocidad de devolucion manual (cm/min)"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x07|0x01|0x01|0x2c|
+	                                                 ---------
+													     |-> Velocidad de devolucion manual en cm/min
+
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla de configuracion del modo continuo -> Al fijar un valor en el Edit Box "Balance de velocidad A (cm/min)" o
+											   al presionar la flecha "Up" situada a la izquierda del Edit Box "Balance de velocidad A (cm/min)" o
+											   al presionar la flecha "Down" situada a la derecha del Edit Box "Balance de velocidad A (cm/min)"
+
+	REF. 3
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x17|0x01|0x00|0x00|
+	                                                 ---------
+													     |-> Balance de velocidad A en cm/min
+
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla de configuracion del modo continuo -> Al fijar un valor en el Edit Box "Balance de velocidad B (cm/min)" o
+											   al presionar la flecha "Up" situada a la izquierda del Edit Box "Balance de velocidad B (cm/min)" o
+											   al presionar la flecha "Down" situada a la derecha del Edit Box "Balance de velocidad B (cm/min)"
+
+	REF. 4
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x16|0x01|0x00|0x0a|
+	                                                 ---------
+													     |-> Balance de velocidad B en cm/min
+
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla de configuracion del modo continuo -> Al fijar un valor en el Edit Box "Longitud de filigrana A (mm)" o
+											   al presionar la flecha "Up" situada a la izquierda del Edit Box "Longitud de filigrana A (mm)" o
+											   al presionar la flecha "Down" situada a la derecha del Edit Box "Longitud de filigrana A (mm)"
+
+	REF. 5
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x1b|0x01|0x00|0x0a|
+	                                                 ---------
+													     |-> Longitud de filigrana A en mm
+
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla de configuracion del modo continuo -> Al fijar un valor en el Edit Box "Longitud de filigrana B (mm)" o
+											   al presionar la flecha "Up" situada a la izquierda del Edit Box "Longitud de filigrana B (mm)" o
+											   al presionar la flecha "Down" situada a la derecha del Edit Box "Longitud de filigrana B (mm)"
+
+	REF. 6
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x1c|0x01|0x00|0x0a|
+	                                                 ---------
+													     |-> Longitud de filigrana B en mm
+
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla de configuracion del modo continuo -> Al presionar el boton "Idioma"
+
+	No envia ninguna trama
+	
+	Nota: Abre un popup para seleccionar el idioma
+
+Pantalla de configuracion del modo continuo -> Idioma -> Al ponerlo en "Ingles"
+
+	REF. 7
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x10|0x01|0x00|0x01|
+	                                                 ---------
+	                                                     |-> Idioma
+															 |0x00|0x00| -> Chino
+															 |0x00|0x01| -> Ingles
+															 |0x00|0x04| -> Coreano
+															 |0x00|0x05| -> Ruso
+															 |0x00|0x02| -> Chino tradicional
+															 |0x00|0x03| -> Japones
+															 |0x00|0x06| -> Aleman
+															 |0x00|0x07| -> Frances
+															 |0x00|0x08| -> Italiano
+															 |0x00|0x09| -> Español
+															 |0x00|0x0a| -> Portugues
+															 |0x00|0x0b| -> Turco
+															 |0x00|0x0c| -> Griego
+															 |0x00|0x0d| -> Checo
+															 |0x00|0x0e| -> Eslovaco
+															 |0x00|0x0f| -> Polaco
+															 |0x00|0x10| -> Tailandes
+															 |0x00|0x11| -> Vietnamita
+															 |0x00|0x12| -> Rumano
+
+	(al ponerlo en Chino)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x27|
+
+	(al ponerlo en Ingles)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x07|
+	
+	(al ponerlo en Coreano)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x13|
+
+	(al ponerlo en Ruso)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x17|
+
+	(al ponerlo en Chino tradicional)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x0b|
+
+	(al ponerlo en Japones)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x0f|
+
+	(al ponerlo en Aleman)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x1b|
+
+	(al ponerlo en Frances)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x1f|
+
+	(al ponerlo en Italiano)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x23|
+
+	(al ponerlo en Español)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x44|
+
+	(al ponerlo en Portugues)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x4b|
+
+	(al ponerlo en Turco)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x52|
+
+	(al ponerlo en Griego)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x59|
+
+	(al ponerlo en Checo)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x60|
+
+	(al ponerlo en Eslovaco)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x67|
+
+	(al ponerlo en Polaco)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x6e|
+
+	(al ponerlo en Tailandes)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x75|
+
+	(al ponerlo en Vietnamita)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x7c|
+
+	(al ponerlo en Rumano)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x83|
+
+Pantalla de configuracion del modo continuo -> Al presionar el boton "Guardar"
+
+	REF. 8
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x0b|0x01|0x00|0x01|
+	
+	REF. 11
+	RESPUESTA -> |0x5a|0xa5|0x0b|0x82|0x10|0x01|0x00|0x01|0x00|0x00|0x00|0x00|0x00|0x00|
+
+Pantalla de configuracion del modo continuo -> Al presionar el boton "Volver"
+
+	No envia ninguna trama
+
+Pantalla de configuracion del modo continuo -> Al presionar el boton "Ayuda"
+
+	No envia ninguna trama
+	
+	Pantalla de ayuda -> Al presionar el boton "X" situado en la esquina superior derecha
+	
+		No envia ninguna trama
+
+Pantalla de configuracion del modo de pulso -> Al fijar un valor en el Edit Box "Promedio (cm/min)" o
+											   al presionar la flecha "Up" situada a la derecha del Edit Box "Promedio (cm/min)" o
+											   al presionar la flecha "Down" situada a la derecha del Edit Box "Promedio (cm/min)"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x13|0x01|0x00|0x3b|
+	                                                 ---------
+													     |-> Promedio en cm/min
+
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla de configuracion del modo de pulso -> Al fijar un valor en el Edit Box "Periodo de pulso (ms)" o
+											   al presionar la flecha "Up" situada a la derecha del Edit Box "Periodo de pulso (ms)" o
+											   al presionar la flecha "Down" situada a la derecha del Edit Box "Periodo de pulso (ms)"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x11|0x01|0x00|0xc8|
+	                                                 ---------
+													     |-> Periodo de pulso en ms
+
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla de configuracion del modo de pulso -> Al fijar un valor en el Edit Box "Lisura (25% - 80%)" o
+											   al presionar la flecha "Up" situada a la derecha del Edit Box "Lisura (25% - 80%)" o
+											   al presionar la flecha "Down" situada a la derecha del Edit Box "Lisura (25% - 80%)"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x12|0x01|0x00|0x1e|
+	                                                 ---------
+													     |-> Lisura en %
+
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla de configuracion del modo de pulso -> Al fijar un valor en el Edit Box "La duracion de la reduccion (mm)" o
+											   al presionar la flecha "Up" situada a la derecha del Edit Box "La duracion de la reduccion (mm)" o
+											   al presionar la flecha "Down" situada a la derecha del Edit Box "La duracion de la reduccion (mm)"
+
+	COMANDO   -> Mismo comando que REF. 2
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla de configuracion del modo de pulso -> Al fijar un valor en el Edit Box "Retardo de subprocesos (ms)" o
+											   al presionar la flecha "Up" situada a la derecha del Edit Box "Retardo de subprocesos (ms)" o
+											   al presionar la flecha "Down" situada a la derecha del Edit Box "Retardo de subprocesos (ms)"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x0a|0x01|0x00|0x0a|
+	                                                 ---------
+													     |-> Retardo de subprocesos en ms
+
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla de configuracion del modo de pulso -> Al fijar un valor en el Edit Box "Balance de velocidad A (cm/min)" o
+											   al presionar la flecha "Up" situada a la izquierda del Edit Box "Balance de velocidad A (cm/min)" o
+											   al presionar la flecha "Down" situada a la derecha del Edit Box "Balance de velocidad A (cm/min)"
+
+	COMANDO   -> Mismo comando que REF. 3
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla de configuracion del modo de pulso -> Al fijar un valor en el Edit Box "Balance de velocidad B (cm/min)" o
+											   al presionar la flecha "Up" situada a la izquierda del Edit Box "Balance de velocidad B (cm/min)" o
+											   al presionar la flecha "Down" situada a la derecha del Edit Box "Balance de velocidad B (cm/min)"
+
+	COMANDO   -> Mismo comando que REF. 4
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla de configuracion del modo de pulso -> Al fijar un valor en el Edit Box "Longitud de filigrana A (mm)" o
+											   al presionar la flecha "Up" situada a la izquierda del Edit Box "Longitud de filigrana A (mm)" o
+											   al presionar la flecha "Down" situada a la derecha del Edit Box "Longitud de filigrana A (mm)"
+
+	COMANDO   -> Mismo comando que REF. 5
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla de configuracion del modo de pulso -> Al fijar un valor en el Edit Box "Longitud de filigrana B (mm)" o
+											   al presionar la flecha "Up" situada a la izquierda del Edit Box "Longitud de filigrana B (mm)" o
+											   al presionar la flecha "Down" situada a la derecha del Edit Box "Longitud de filigrana B (mm)"
+
+	COMANDO   -> Mismo comando que REF. 6
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla de configuracion del modo de pulso -> Al presionar el boton "Idioma"
+
+	No envia ninguna trama
+	
+	Nota: Abre un popup para seleccionar el idioma
+
+Pantalla de configuracion del modo de pulso -> Idioma -> Al ponerlo en "Ingles"
+
+	COMANDO   -> Mismo comando que REF. 7
+	
+	(al ponerlo en Chino)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x32|
+
+	(al ponerlo en Ingles)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x34|
+	
+	(al ponerlo en Coreano)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x3a|
+
+	(al ponerlo en Ruso)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x3c|
+
+	(al ponerlo en Chino tradicional)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x36|
+
+	(al ponerlo en Japones)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x38|
+
+	(al ponerlo en Aleman)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x3e|
+
+	(al ponerlo en Frances)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x40|
+
+	(al ponerlo en Italiano)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x42|
+
+	(al ponerlo en Español)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x49|
+
+	(al ponerlo en Portugues)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x50|
+
+	(al ponerlo en Turco)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x57|
+
+	(al ponerlo en Griego)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x5e|
+
+	(al ponerlo en Checo)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x65|
+
+	(al ponerlo en Eslovaco)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x6c|
+
+	(al ponerlo en Polaco)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x73|
+
+	(al ponerlo en Tailandes)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x7a|
+
+	(al ponerlo en Vietnamita)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x81|
+
+	(al ponerlo en Rumano)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x88|
+
+Pantalla de configuracion del modo de pulso -> Al presionar el boton "Guardar"
+
+	COMANDO   -> Mismo comando que REF. 8
+	RESPUESTA -> Misma respuesta que REF. 11
+
+Pantalla de configuracion del modo de pulso -> Al presionar el boton "Volver"
+
+	No envia ninguna trama
+
+Pantalla de configuracion del modo de pulso -> Al presionar el boton "Ayuda"
+
+	No envia ninguna trama
+	
+	Pantalla de ayuda -> Al presionar el boton "X" situado en la esquina superior derecha
+	
+		No envia ninguna trama

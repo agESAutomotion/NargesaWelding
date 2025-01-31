@@ -1,0 +1,2029 @@
+NOTA: Visualizacion del archivo con tamaño de tabuladores a 4
+
+===============================================================================
+COMUNICACIÓN DE PANTALLA (MASTER )A CPU (SLAVE)
+===============================================================================
+
+-------------------------------------------------------------------------------
+CONFIGURACION DE LA COMUNICACION
+-------------------------------------------------------------------------------
+COMUNICACION: RS232
+BAUDRATE:     115200 baudios
+
+8N1:          1 bit de Start
+			  1 bit de Stop
+			  8 bits de datos
+  			  Sin paridad
+
+-------------------------------------------------------------------------------
+PATRONES DE LAS TRAMAS
+-------------------------------------------------------------------------------
+
+COMANDO   -> |0x5a|0xa5|0xXX|0x83|0xXX|0xXX|0xXX|...|
+              --------- ---- ---- --------- ---- ---
+                  |       |    |      |       |   |-> Parametros (cada parametro ocupa 2 bytes) 
+				  |       |    |      |       |-> Numero de parametros
+				  |       |    |      |-> Direccion ???
+				  |       |    |-> Comando
+				  |       |-> Numero de bytes de la trama a partir de aqui
+				  |-> Inicio de trama
+
+RESPUESTA -> |0x5a|0xa5|0xXX|0x82|0xXX|0xXX|...|
+              --------- ---- ---- --------- ---
+                  |       |    |      |      |-> Parametros (cada parametro ocupa 2 bytes) 
+				  |       |    |      |-> Direccion ???
+				  |       |    |-> Respuesta (Al arrancar, algunas tramas contienen un 0x83 en la respuesta, en lugar de un 0x82)
+				  |       |-> Numero de bytes de la trama a partir de aqui
+				  |-> Inicio de trama
+
+-------------------------------------------------------------------------------
+SISTEMA DE SOLDADURA LASER
+-------------------------------------------------------------------------------
+
+Al dar alimentacion a la placa
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x20|0x02|0x01|0x00|0x03|
+	             |0x5a|0xa5|0x06|0x83|0x20|0x08|0x01|0x00|0x13|
+	             |0x5a|0xa5|0x06|0x83|0x20|0x06|0x01|0x00|0x02|
+	             |0x5a|0xa5|0x06|0x83|0x10|0xe0|0x01|0x03|0x24|
+	             |0x5a|0xa5|0x06|0x83|0x20|0x07|0x01|0x00|0x02|
+	             |0x5a|0xa5|0x06|0x83|0x16|0x00|0x01|0x00|0x01|
+	             |0x5a|0xa5|0x06|0x83|0x16|0x00|0x01|0x00|0x01|
+	             |0x5a|0xa5|0x06|0x83|0x20|0x0d|0x01|0x00|0x00|
+	
+	RESPUESTA -> |0x5a|0xa5|0x04|0x83|0x20|0x02|0x01|
+	             |0x5a|0xa5|0x04|0x83|0x20|0x02|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x02|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x02|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x02|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x02|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x02|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x08|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x06|0x01|
+				 
+				 + Misma respuesta que REF. 1
+				 
+				 |0x5a|0xa5|0x04|0x83|0x10|0xe0|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x07|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x16|0x00|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x16|0x00|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x0d|0x01|
+				 
+				 + Misma respuesta que REF. 1
+				 
+				 |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x01|0xe3|
+				 |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x01|0xe3|
+				 |0x5a|0xa5|0x05|0x82|0x50|0x00|0xff|0x00|
+				 
+				 + Misma respuesta que REF. 1
+				 + Misma respuesta que REF. 7
+				 
+				 |0x5a|0xa5|0x0f|0x82|0x10|0x40|0x09|0xc4|0x01|0x2c|0x05|0xdc|0x00|0x32|0x00|0x00|0x07|0xd0|
+												--------- --------- --------- --------- -------------------
+													|         |         |         |              |-> Frecuencia en Hz
+													|         |         |         |-> Ciclo de trabajo en %
+													|         |         |-> Potencia maxima en W
+													|         |-> Ancho de escaneo en centesimas de mm
+													|-> Velocidad de escaneo en decimas de mm por segundo
+
+				 |0x5a|0xa5|0x05|0x82|0x15|0x01|0x00|0x32|
+				                                ---------
+												    |-> Velocidad de alimentacion del cable en cm/min
+				 
+				 |0x5a|0xa5|0x31|0x82|0x16|0x0d|0x00|0x00|0x00|0x10|0x00|0x01|0x00|0x1e|0x00|0x28|0x00|0x32|
+                                                ---------
+													|-> Seleccion Parametros comunes / Banco de procesos
+													    |0x00|0x00| -> Parametros comunes
+														|0x00|0x01| -> Banco de procesos
+
+				 |0x00|0x3c|0x00|0x46|0x00|0x50|0x00|0x2a|0x00|0x82|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				 |0x00|0x00|0x00|0x01|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x01|
+				 
+				 + Misma respuesta que REF. 1
+				 + Misma respuesta que REF. 1
+				 
+				 |0x5a|0xa5|0x25|0x82|0x15|0x00|0x00|0x00|0x01|0x2c|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				 |0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x02|0x00|0x01|0x00|0x00|0x00|0x00|0x00|0x00|
+
+Pantalla principal -> Activacion del laser -> Al ponerlo en "OFF"
+
+	Nota: Los parametros que aparecen en la pantalla son estos.
+	
+		Velocidad de escaneo = 250.0 mm/s
+		Ancho de escaneo = 3.00 mm
+		Potencia maxima = 1500 W
+		Ciclo de trabajo = 50 %
+		Frecuencia = 2000 Hz
+		Activacion del laser = EN
+		Luz roja = LINEA
+		Modo de soldadura = Continuidad
+		Cierro seguro (Led) = Apagado
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x0b|0x01|0x00|0x00|
+	
+	REF. 1
+	RESPUESTA -> |0x5a|0xa5|0x3d|0x82|0x10|0x01|0x09|0xc4|0x01|0x2c|0x05|0xdc|0x00|0x32|0x00|0x01|
+	                                            --------- --------- --------- --------- ---------
+												    |         |         |         |         |-> Modo de soldadura
+													|         |         |         |             |0x00|0x00| -> Soldadura por puntos
+													|         |         |         |             |0x00|0x01| -> Continuidad
+												    |         |         |         |-> Ciclo de trabajo en %
+												    |         |         |-> Potencia maxima en W
+												    |         |-> Ancho de escaneo en centesimas de mm
+												    |-> Velocidad de escaneo en decimas de mm por segundo
+				 
+				 |0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x01|0x00|0x00|0x00|0x01|0x00|0x00|
+				  ---------           --------- ---------           --------- ---------
+                      |                   |         |                   |         |-> Luz roja
+                      |                   |         |                   |             |0x00|0x00| -> DOT
+                      |                   |         |                   |             |0x00|0x01| -> LINEA
+                      |                   |         |                   |-> Activacion del laser
+                      |                   |         |                       |0x00|0x00| -> OFF
+                      |                   |         |                       |0x00|0x01| -> EN
+					  |                   |         |-> Indicador de alarma del refrigerador
+					  |                   |             |0x00|0x00| -> Alarma del refrigerador no activada
+					  |                   |             |0x00|0x01| -> Alarma del refrigerador activada
+					  |                   |-> Indicador de alarma laser
+					  |                       |0x00|0x00| -> Alarma laser no activada
+					  |                       |0x00|0x01| -> Alarma laser activada
+					  |-> Indicador de alarma
+					      |0x00|0x00| -> Ninguna alarma activa
+						  |0x00|0x02| -> Alguna alarma activa
+
+				 |0x00|0x00|0x07|0xd0|0x00|0x02|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				  -------------------
+				           |-> Frecuencia en Hz
+				 
+				 |0x00|0x01|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+
+Pantalla principal -> Activacion del laser -> Al ponerlo en "EN"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x0b|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 1
+
+Pantalla principal -> Luz roja -> Al ponerlo en "DOT"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x0c|0x01|0x00|0x00|
+	RESPUESTA -> Misma respuesta que REF. 1
+
+Pantalla principal -> Luz roja -> Al ponerlo en "LINEA"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x0c|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 1
+
+Pantalla principal -> Modo de soldadura -> Al ponerlo en "Soldadura por puntos"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x05|0x01|0x00|0x00|
+	RESPUESTA -> Misma respuesta que REF. 1
+
+Pantalla principal -> Modo de soldadura -> Al ponerlo en "Continuidad"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x05|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 1
+
+Pantalla principal -> Al presionar el texto "Cierre seguro"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x20|0x06|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 1
+
+Pantalla principal -> Al presionar el boton redondo con dos flechas situado en la esquina superior derecha
+
+	No envia ninguna trama
+
+	Pantalla de confirmacion de entrada en el modo "Sistema de limpieza laser" -> Al presionar el boton "Continuar"
+
+		COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0x00|0x01|0x00|0x01|
+		RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x01|0xff| + Misma respuesta que REF. 1
+		
+		Nota: Despues de enviar esta trama, aparece una pantalla con el mensaje
+			  "Por favor, apague y reinicie."
+
+Pantalla principal -> Al presionar el boton "Parametros" con "Parametros comunes" seleccionado
+
+	Nota: Los parametros que aparecen en la pantalla son estos.
+	
+		Velocidad de escaneo = 250.0 mm/s
+		Ancho de escaneo = 3.00 mm
+		Potencia maxima = 1500 W
+		Ciclo de trabajo = 50 %
+		Frecuencia = 2000 Hz
+		Velocidad de alimentacion del cable = 50 cm/min
+		Parametros comunes = seleccionado
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x51|0x01|0x01|0x00|0x01|
+	
+	REF. 5
+	RESPUESTA -> |0x5a|0xa5|0x0f|0x82|0x10|0x40|0x09|0xc4|0x01|0x2c|0x05|0xdc|0x00|0x32|0x00|0x00|0x07|0xd0|
+												--------- --------- --------- --------- -------------------
+													|         |         |         |              |-> Frecuencia en Hz
+													|         |         |         |-> Ciclo de trabajo en %
+													|         |         |-> Potencia maxima en W
+													|         |-> Ancho de escaneo en centesimas de mm
+													|-> Velocidad de escaneo en decimas de mm por segundo
+
+				 |0x5a|0xa5|0x05|0x82|0x15|0x01|0x00|0x32|
+				                                ---------
+												    |-> Velocidad de alimentacion del cable en cm/min
+				 
+				 |0x5a|0xa5|0x31|0x82|0x16|0x0d|0x00|0x00|0x00|0x10|0x00|0x01|0x00|0x1e|0x00|0x28|0x00|0x32|
+                                                ---------
+													|-> Seleccion Parametros comunes / Banco de procesos
+													    |0x00|0x00| -> Parametros comunes
+														|0x00|0x01| -> Banco de procesos
+
+				 |0x00|0x3c|0x00|0x46|0x00|0x50|0x00|0x2a|0x00|0x82|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				 |0x00|0x00|0x00|0x01|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x01|
+				 
+				 |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x01|0xea|
+				                                          ---------
+														      |-> Indicador de la visualizacion en pantalla de los parametros de soldadura por puntos,
+															      que son: Tipo de soldadura, Duracion de la soldadura e Intervalo de la soldadura
+																  
+															      |0x01|0xea| -> No se visualizan los parametros de soldadura por puntos
+																  |0x01|0xe9| -> Se visualizan los parametros de soldadura por puntos
+
+Pantalla principal -> Al presionar el boton "Parametros" con "Banco de procesos" seleccionado
+
+	Nota: Los parametros que aparecen en la pantalla son estos.
+	
+		Velocidad de escaneo = 301.0 mm/s
+		Ancho de escaneo = 3.50 mm
+		Potencia maxima = 700 W
+		Ciclo de trabajo = 68 %
+		Frecuencia = 1999 Hz
+		Velocidad de alimentacion del cable = 60 cm/min
+		Diametro del alambre de soldadura = 1.2 mm
+		Boton redondo situado a la derecha de "Diametro del alambre de soldadura" = *1
+		Banco de procesos = seleccionado
+		Material = Acero al carbono
+		Primer Edit Box "Espesor mm" de "Banco de procesos" = 1.0 mm (No seleccionado)
+		Segundo Edit Box "Espesor mm" de "Banco de procesos" = 2.0 mm (Seleccionado)
+		Tercer Edit Box "Espesor mm" de "Banco de procesos" = 3.0 mm (No seleccionado)
+		Cuarto Edit Box "Espesor mm" de "Banco de procesos" = 4.0 mm (No seleccionado)
+		Quinto Edit Box "Espesor mm" de "Banco de procesos" = 5.0 mm (No seleccionado)
+		Sexto Edit Box "Espesor mm" de "Banco de procesos" = 6.0 mm (No seleccionado)
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x51|0x01|0x01|0x00|0x01|
+	
+	REF. 6
+	RESPUESTA -> |0x5a|0xa5|0x0f|0x82|0x10|0x40|0x0b|0xc2|0x01|0x5e|0x02|0xbc|0x00|0x44|0x00|0x00|0x07|0xcf|
+												--------- --------- --------- --------- -------------------
+													|         |         |         |              |-> Frecuencia en Hz
+													|         |         |         |-> Ciclo de trabajo en %
+													|         |         |-> Potencia maxima en W
+													|         |-> Ancho de escaneo en centesimas de mm
+													|-> Velocidad de escaneo en decimas de mm por segundo
+
+				 |0x5a|0xa5|0x05|0x82|0x15|0x01|0x00|0x3c|
+				                                ---------
+												    |-> Velocidad de alimentacion del cable en cm/min
+				 
+				 |0x5a|0xa5|0x31|0x82|0x16|0x0d|0x00|0x01|0x00|0x0c|0x00|0x00|0x00|0x0a|0x00|0x14|0x00|0x1e|
+                                                --------- --------- --------- --------- --------- ---------
+												    |         |         |         |         |         |-> Tercer Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+												    |         |         |         |         |-> Segundo Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+												    |         |         |         |-> Primer Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+													|         |         |-> Boton redondo situado a la derecha de "Diametro del alambre de soldadura"
+													|         |             |0x00|0x00| -> *1
+													|         |             |0x00|0x01| -> *2
+												    |         |-> Diametro del alambre de soldadura en decimas de mm
+													|-> Seleccion Parametros comunes / Banco de procesos
+													    |0x00|0x00| -> Parametros comunes
+														|0x00|0x01| -> Banco de procesos
+
+				 |0x00|0x28|0x00|0x32|0x00|0x3c|0x00|0x0a|0x00|0x14|0x00|0x01|0x00|0x00|0x00|0x00|0x00|0x00|
+				  --------- --------- ---------                     --------- --------- --------- ---------
+				      |         |         |                             |         |         |         |-> Seleccion de material "otros"
+					  |         |         |                             |         |         |             |0x00|0x00| -> No seleccionado
+					  |         |         |                             |         |         |             |0x00|0x01| -> Seleccionado
+					  |         |         |                             |         |         |-> Seleccion de material "Aluminio"
+					  |         |         |                             |         |             |0x00|0x00| -> No seleccionado
+					  |         |         |                             |         |             |0x00|0x01| -> Seleccionado
+					  |         |         |                             |         |-> Seleccion de material "Acero inoxidable"
+					  |         |         |                             |             |0x00|0x00| -> No seleccionado
+					  |         |         |                             |             |0x00|0x01| -> Seleccionado
+					  |         |         |                             |-> Seleccion de material "Acero al carbono"
+					  |         |         |                                 |0x00|0x00| -> No seleccionado
+					  |         |         |                                 |0x00|0x01| -> Seleccionado
+				      |         |         |-> Sexto Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+				      |         |-> Quinto Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+				      |-> Cuarto Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+				 
+				 |0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x01|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				                      --------- --------- --------- --------- --------- ---------
+									      |         |         |         |         |         |-> Seleccion del sexto Edit Box "Espesor mm" de "Banco de procesos"
+										  |         |         |         |         |             |0x00|0x00| -> No seleccionado
+										  |         |         |         |         |             |0x00|0x01| -> Seleccionado
+										  |         |         |         |         |-> Seleccion del quinto Edit Box "Espesor mm" de "Banco de procesos"
+										  |         |         |         |             |0x00|0x00| -> No seleccionado
+										  |         |         |         |             |0x00|0x01| -> Seleccionado
+										  |         |         |         |-> Seleccion del cuarto Edit Box "Espesor mm" de "Banco de procesos"
+										  |         |         |             |0x00|0x00| -> No seleccionado
+										  |         |         |             |0x00|0x01| -> Seleccionado
+										  |         |         |-> Seleccion del tercer Edit Box "Espesor mm" de "Banco de procesos"
+										  |         |             |0x00|0x00| -> No seleccionado
+										  |         |             |0x00|0x01| -> Seleccionado
+										  |         |-> Seleccion del segundo Edit Box "Espesor mm" de "Banco de procesos"
+										  |             |0x00|0x00| -> No seleccionado
+										  |             |0x00|0x01| -> Seleccionado
+										  |-> Seleccion del primer Edit Box "Espesor mm" de "Banco de procesos"
+										      |0x00|0x00| -> No seleccionado
+											  |0x00|0x01| -> Seleccionado
+				 
+				 |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x01|0xe8|
+				                                          ---------
+														      |-> Indicador de la visualizacion en pantalla de los parametros de soldadura por puntos,
+															      que son: Tipo de soldadura, Duracion de la soldadura e Intervalo de la soldadura
+																  
+															      |0x01|0xe8| -> No se visualizan los parametros de soldadura por puntos
+																  |0x01|0xe7| -> Se visualizan los parametros de soldadura por puntos
+
+Pantalla principal -> Al presionar el boton "Ajustes"
+
+	No envia ninguna trama
+
+	Pantalla de password para acceder a la pantalla de ajustes -> Despues de introducir un password incorrecto y confirmarlo
+
+		COMANDO   -> |0x5a|0xa5|0x08|0x83|0x10|0x19|0x02|0x00|0x01|0xe2|0x35|
+														 -------------------
+																  |-> Password incorrecto (123445)
+
+		RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x01|0xf2|
+
+	Pantalla de password para acceder a la pantalla de ajustes -> Despues de introducir el password correcto "123456" y confirmarlo
+
+	Nota: Los parametros que aparecen en la pantalla son estos.
+	
+		Potencia del laser = 1500 W
+		Retraso de gas abierto = 201 ms
+		Retraso de gas apagado = 200 ms
+		Potencia de arranque del laser = 30 %
+		Laser en tiempo progresivo = 500 ms
+		Laser apagado = 80 %
+		Tiempo progresivo de apagado del laser = 501 ms
+		Retraso del hilo de soldadura = 1234 ms
+		Idioma = Español
+		Correccion de la exploracion = 1.10
+		Desplazamiento del centro del laser = 0.51 mm
+		Duracion de la soldadura por puntos = 502 ms
+		Intervalo de soldadura por puntos = 503 ms
+		Umbral de temperatura de accionamiento del motor = 65.0 ºC
+		Umbral de temperatura del espejo protector = 58.0 ºC
+		Umbral de temperatura del colimador = 59.0 ºC
+		Tipo de soldadura por puntos = Escamas de pescado
+		Nivel de alarma laser = Bajo
+		Nivel de alarma del enfriador = Bajo
+		Nivel de alarma de presion = Bajo
+
+		COMANDO   -> |0x5a|0xa5|0x08|0x83|0x10|0x19|0x02|0x00|0x01|0xe2|0x40|
+														 -------------------
+																  |-> Password correcto (123456)
+
+		RESPUESTA -> Misma respuesta que REF. 7 + |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x01|0xe5|
+
+Pantalla principal -> Al presionar el boton "Monitor"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x51|0x02|0x01|0x00|0x01|
+	
+	RESPUESTA -> |0x5a|0xa5|0x23|0x82|0x10|0x30|0x00|0x01|0x00|0x01|0x00|0x01|0x00|0x01|0x00|0x01|0x00|0x00|
+                                                --------- --------- --------- --------- ---------
+												    |         |         |         |         |-> Señal de alarma de la presion del aire (Entrada)
+													|         |         |         |             |0x00|0x00| -> Contacto cerrado entre conector "Signal Interface 1 - Pin 2" y conector "Signal Interface 1 - Pin 1"
+													|         |         |         |             |0x00|0x01| -> Contacto abierto
+												    |         |         |         |-> Señal de alarma del enfriador de agua (Entrada)
+													|         |         |             |0x00|0x00| -> Contacto cerrado entre conector "Signal Interface 1 - Pin 4" y conector "Signal Interface 1 - Pin 3"
+													|         |         |             |0x00|0x01| -> Contacto abierto
+												    |         |         |-> Señal de bloqueo seguro (Entrada)
+													|         |             |0x00|0x00| -> Contacto cerrado entre conector "Signal Interface 1 - Pin 6" y conector "Signal Interface 1 - Pin 5"
+													|         |             |0x00|0x01| -> Contacto abierto
+													|         |-> Señal de alarma laser (Entrada)
+													|             |0x00|0x00| -> Contacto cerrado entre conector "Signal Interface 3 - Pin 1" y conector "Signal Interface 3 - Pin 4"
+													|             |0x00|0x01| -> Contacto abierto
+                                                    |-> Señal de disparo del laser (Entrada)
+                                                        |0x00|0x00| -> Contacto cerrado entre conector "Signal Interface 1 - Pin 8" y conector "Signal Interface 1 - Pin 5"
+                                                        |0x00|0x01| -> Contacto abierto
+	
+	             |0x01|0x1c|0x00|0x00|0x00|0x01|0x03|0xe7|0x01|0x73|0x4d|0x2e|0x00|0x00|0x02|0x76|0x03|0x38|0x00|0x00|
+                  ---------                               -------------------           --------- ---------
+                      |                                            |                        |         |-> Segunda parte de "System Version"
+                      |                                            |                        |-> Primera parte de "System Version"
+                      |                                            |-> Equipment number
+                      |-> Umbral de temperatura de accionamiento del motor en decimas de ºC
+				 
+				 |0x5a|0xa5|0x33|0x82|0x11|0x10|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+                                                                                                  ---------
+                                                                                                      |-> Voltaje de "PWM" en decimas de voltio (Salida)
+				 
+				 |0x00|0x00|0x00|0x00|0x00|0x00|0x00|0xf9|0x00|0x95|0xff|0x6b|0x01|0x6b|0x00|0x43|0x00|0x01|
+				  --------- --------- --------- --------- --------- --------- --------- ---------
+				      |         |         |         |         |         |         |         |-> Intensidad de "+- de alimentacion de 15V" en mA (Alimentacion)
+				      |         |         |         |         |         |         |-> Intensidad de "Corriente de alimentacion de 24V" en mA (Alimentacion)
+				      |         |         |         |         |         |-> Voltaje de "- Tension de alimentacion de 15V" en decimas de voltio (Alimentacion)
+				      |         |         |         |         |-> Voltaje de "Tension de alimentacion de +15V" en decimas de voltio (Alimentacion)
+				      |         |         |         |-> Voltaje de "Tension de alimentacion de 24V" en decimas de voltio (Alimentacion)
+				      |         |         |-> Voltaje de "Tension analogica" en decimas de voltio (salida)
+				      |         |-> Voltaje de "Señal de habilitacion de la valvula de gas" en decimas de voltio (Salida)
+				      |-> Voltaje de "Señal de habilitacion del laser" en decimas de voltio (Salida)
+				 
+				 |0x00|0x00|0x27|0x06|0x27|0x06|0x00|0x01|0x00|0x00|0x00|0x00|0x00|0x0f|0x00|0x00|0x00|0x00|
+				 
+				 + Estas dos mismas tramas de respuesta repetidas continuamente
+
+Pantalla de parametros -> Al presionar boton "Importar"
+
+	Nota: Los parametros que aparecen en la pantalla son estos.
+	
+		Velocidad de escaneo = 250.0 mm/s
+		Ancho de escaneo = 3.00 mm
+		Potencia maxima = 1500 W
+		Ciclo de trabajo = 50 %
+		Frecuencia = 2000 Hz
+		Velocidad de alimentacion del cable = 50 cm/min
+	
+	Nota: Si en la pantalla principal ponemos "Modo de soldadura" a "Soldadura por puntos",
+	      aparecen tambien en esta pantalla los siguientes parametros.
+	
+		Tipo de soldadura por puntos
+		Duracion de la soldadura por puntos
+		Intervalo de la soldadura por puntos
+
+	COMANDO   -> |0x5a|0xa5|0x10|0x83|0x10|0x40|0x06|0x09|0xc4|0x01|0x2c|0x05|0xdc|0x00|0x32|0x00|0x00|0x07|0xd0|
+	                                                 --------- --------- --------- --------- -------------------
+										                 |         |         |         |              |-> Frecuencia en Hz
+										                 |         |         |         |-> Ciclo de trabajo en %
+										                 |         |         |-> Potencia maxima en W
+										                 |         |-> Ancho de escaneo en centesimas de mm
+										                 |-> Velocidad de escaneo en decimas de mm por segundo
+
+	RESPUESTA -> |0x5a|0xa5|0x0f|0x82|0x10|0x40|0x09|0xc4|0x01|0x2c|0x05|0xdc|0x00|0x32|0x00|0x00|0x07|0xd0| + Misma respuesta que REF. 1
+												--------- --------- --------- --------- -------------------
+													|         |         |         |              |-> Frecuencia en Hz
+													|         |         |         |-> Ciclo de trabajo en %
+													|         |         |-> Potencia maxima en W
+													|         |-> Ancho de escaneo en centesimas de mm
+													|-> Velocidad de escaneo en decimas de mm por segundo
+
+Pantalla de parametros -> Al cambiar "Velocidad de alimentacion del cable"
+
+	Nota: Ponemos este parametro a 300 cm/min
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x15|0x01|0x01|0x01|0x2c|
+	                                                 ---------
+										                 |-> Velocidad de alimentacion del cable en cm/min
+	
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla de parametros -> Al cambiar "Diametro del alambre de soldadura"
+
+	Nota: Ponemos este parametro a 3.0 mm
+	
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x16|0x0e|0x01|0x00|0x1e|
+	                                                 ---------
+										                 |-> Diametro del alambre de soldadura en decimas de mm
+
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla de parametros -> Al presionar el boton redondo situado a la derecha de "Diametro del alambre de
+                          soldadura" y ponerlo a "*2"
+
+	Nota: Esto provoca que los parametros de la pantalla cambien como si hubiera dos configuraciones
+	      diferentes. Una para *1 y otra para *2.
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x16|0x0f|0x01|0x00|0x01|
+
+	REF. 2
+	RESPUESTA -> |0x5a|0xa5|0x05|0x82|0x15|0x01|0x00|0x32|
+				                                ---------
+												    |-> Velocidad de alimentacion del cable en cm/min
+
+				 |0x5a|0xa5|0x31|0x82|0x16|0x0d|0x00|0x01|0x00|0x0c|0x00|0x00|0x00|0x0a|0x00|0x14|0x00|0x1e|
+                                                --------- --------- --------- --------- --------- ---------
+												    |         |         |         |         |         |-> Tercer Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+												    |         |         |         |         |-> Segundo Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+												    |         |         |         |-> Primer Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+													|         |         |-> Boton redondo situado a la derecha de "Diametro del alambre de soldadura"
+													|         |             |0x00|0x00| -> *1
+													|         |             |0x00|0x01| -> *2
+												    |         |-> Diametro del alambre de soldadura en decimas de mm
+													|-> Seleccion Parametros comunes / Banco de procesos
+													    |0x00|0x00| -> Parametros comunes
+														|0x00|0x01| -> Banco de procesos
+
+				 |0x00|0x28|0x00|0x32|0x00|0x3c|0x00|0x0a|0x00|0x14|0x00|0x01|0x00|0x00|0x00|0x00|0x00|0x00|
+				  --------- --------- ---------                     --------- --------- --------- ---------
+				      |         |         |                             |         |         |         |-> Seleccion de material "otros"
+					  |         |         |                             |         |         |             |0x00|0x00| -> No seleccionado
+					  |         |         |                             |         |         |             |0x00|0x01| -> Seleccionado
+					  |         |         |                             |         |         |-> Seleccion de material "Aluminio"
+					  |         |         |                             |         |             |0x00|0x00| -> No seleccionado
+					  |         |         |                             |         |             |0x00|0x01| -> Seleccionado
+					  |         |         |                             |         |-> Seleccion de material "Acero inoxidable"
+					  |         |         |                             |             |0x00|0x00| -> No seleccionado
+					  |         |         |                             |             |0x00|0x01| -> Seleccionado
+					  |         |         |                             |-> Seleccion de material "Acero al carbono"
+					  |         |         |                                 |0x00|0x00| -> No seleccionado
+					  |         |         |                                 |0x00|0x01| -> Seleccionado
+				      |         |         |-> Sexto Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+				      |         |-> Quinto Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+				      |-> Cuarto Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+				 
+				 |0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x01|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				                      --------- --------- --------- --------- --------- ---------
+									      |         |         |         |         |         |-> Seleccion del sexto Edit Box "Espesor mm" de "Banco de procesos"
+										  |         |         |         |         |             |0x00|0x00| -> No seleccionado
+										  |         |         |         |         |             |0x00|0x01| -> Seleccionado
+										  |         |         |         |         |-> Seleccion del quinto Edit Box "Espesor mm" de "Banco de procesos"
+										  |         |         |         |             |0x00|0x00| -> No seleccionado
+										  |         |         |         |             |0x00|0x01| -> Seleccionado
+										  |         |         |         |-> Seleccion del cuarto Edit Box "Espesor mm" de "Banco de procesos"
+										  |         |         |             |0x00|0x00| -> No seleccionado
+										  |         |         |             |0x00|0x01| -> Seleccionado
+										  |         |         |-> Seleccion del tercer Edit Box "Espesor mm" de "Banco de procesos"
+										  |         |             |0x00|0x00| -> No seleccionado
+										  |         |             |0x00|0x01| -> Seleccionado
+										  |         |-> Seleccion del segundo Edit Box "Espesor mm" de "Banco de procesos"
+										  |             |0x00|0x00| -> No seleccionado
+										  |             |0x00|0x01| -> Seleccionado
+										  |-> Seleccion del primer Edit Box "Espesor mm" de "Banco de procesos"
+										      |0x00|0x00| -> No seleccionado
+											  |0x00|0x01| -> Seleccionado
+
+				 |0x5a|0xa5|0x0f|0x82|0x10|0x40|0x0b|0xc2|0x01|0x5e|0x02|0xbc|0x00|0x44|0x00|0x00|0x07|0xcf|
+												--------- --------- --------- --------- -------------------
+													|         |         |         |              |-> Frecuencia en Hz
+													|         |         |         |-> Ciclo de trabajo en %
+													|         |         |-> Potencia maxima en W
+													|         |-> Ancho de escaneo en centesimas de mm
+													|-> Velocidad de escaneo en decimas de mm por segundo
+
+Pantalla de parametros -> Al presionar el boton redondo situado a la derecha de "Diametro del alambre de
+                          soldadura" y ponerlo a "*1"
+
+	Nota: Esto provoca que los parametros de la pantalla cambien como si hubiera dos configuraciones
+	      diferentes. Una para *1 y otra para *2.
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x16|0x0f|0x01|0x00|0x00|
+	
+	RESPUESTA -> Misma respuesta que REF. 2
+
+Pantalla de parametros -> Al presionar el boton "Banco de procesos"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x16|0x0d|0x01|0x00|0x01|
+	
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x01|0xe8|
+
+				 |0x5a|0xa5|0x05|0x82|0x15|0x01|0x00|0x3c|
+				                                ---------
+												    |-> Velocidad de alimentacion del cable en cm/min
+				 
+				 |0x5a|0xa5|0x31|0x82|0x16|0x0d|0x00|0x01|0x00|0x0c|0x00|0x00|0x00|0x0a|0x00|0x14|0x00|0x1e|
+                                                --------- --------- --------- --------- --------- ---------
+												    |         |         |         |         |         |-> Tercer Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+												    |         |         |         |         |-> Segundo Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+												    |         |         |         |-> Primer Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+													|         |         |-> Boton redondo situado a la derecha de "Diametro del alambre de soldadura"
+													|         |             |0x00|0x00| -> *1
+													|         |             |0x00|0x01| -> *2
+												    |         |-> Diametro del alambre de soldadura en decimas de mm
+													|-> Seleccion Parametros comunes / Banco de procesos
+													    |0x00|0x00| -> Parametros comunes
+														|0x00|0x01| -> Banco de procesos
+
+				 |0x00|0x28|0x00|0x32|0x00|0x3c|0x00|0x0a|0x00|0x14|0x00|0x01|0x00|0x00|0x00|0x00|0x00|0x00|
+				  --------- --------- ---------                     --------- --------- --------- ---------
+				      |         |         |                             |         |         |         |-> Seleccion de material "otros"
+					  |         |         |                             |         |         |             |0x00|0x00| -> No seleccionado
+					  |         |         |                             |         |         |             |0x00|0x01| -> Seleccionado
+					  |         |         |                             |         |         |-> Seleccion de material "Aluminio"
+					  |         |         |                             |         |             |0x00|0x00| -> No seleccionado
+					  |         |         |                             |         |             |0x00|0x01| -> Seleccionado
+					  |         |         |                             |         |-> Seleccion de material "Acero inoxidable"
+					  |         |         |                             |             |0x00|0x00| -> No seleccionado
+					  |         |         |                             |             |0x00|0x01| -> Seleccionado
+					  |         |         |                             |-> Seleccion de material "Acero al carbono"
+					  |         |         |                                 |0x00|0x00| -> No seleccionado
+					  |         |         |                                 |0x00|0x01| -> Seleccionado
+				      |         |         |-> Sexto Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+				      |         |-> Quinto Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+				      |-> Cuarto Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+				 
+				 |0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x01|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				                      --------- --------- --------- --------- --------- ---------
+									      |         |         |         |         |         |-> Seleccion del sexto Edit Box "Espesor mm" de "Banco de procesos"
+										  |         |         |         |         |             |0x00|0x00| -> No seleccionado
+										  |         |         |         |         |             |0x00|0x01| -> Seleccionado
+										  |         |         |         |         |-> Seleccion del quinto Edit Box "Espesor mm" de "Banco de procesos"
+										  |         |         |         |             |0x00|0x00| -> No seleccionado
+										  |         |         |         |             |0x00|0x01| -> Seleccionado
+										  |         |         |         |-> Seleccion del cuarto Edit Box "Espesor mm" de "Banco de procesos"
+										  |         |         |             |0x00|0x00| -> No seleccionado
+										  |         |         |             |0x00|0x01| -> Seleccionado
+										  |         |         |-> Seleccion del tercer Edit Box "Espesor mm" de "Banco de procesos"
+										  |         |             |0x00|0x00| -> No seleccionado
+										  |         |             |0x00|0x01| -> Seleccionado
+										  |         |-> Seleccion del segundo Edit Box "Espesor mm" de "Banco de procesos"
+										  |             |0x00|0x00| -> No seleccionado
+										  |             |0x00|0x01| -> Seleccionado
+										  |-> Seleccion del primer Edit Box "Espesor mm" de "Banco de procesos"
+										      |0x00|0x00| -> No seleccionado
+											  |0x00|0x01| -> Seleccionado
+
+				 |0x5a|0xa5|0x0f|0x82|0x10|0x40|0x0b|0xc2|0x01|0x5e|0x02|0xbc|0x00|0x44|0x00|0x00|0x07|0xcf|
+												--------- --------- --------- --------- -------------------
+													|         |         |         |              |-> Frecuencia en Hz
+													|         |         |         |-> Ciclo de trabajo en %
+													|         |         |-> Potencia maxima en W
+													|         |-> Ancho de escaneo en centesimas de mm
+													|-> Velocidad de escaneo en decimas de mm por segundo
+
+Pantalla de parametros -> Al presionar el boton "Parametros comunes"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x16|0x0d|0x01|0x00|0x00|
+	
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x01|0xea|
+	
+				 |0x5a|0xa5|0x0f|0x82|0x10|0x40|0x09|0xc4|0x01|0x2c|0x05|0xdc|0x00|0x32|0x00|0x00|0x07|0xd0|
+												--------- --------- --------- --------- -------------------
+													|         |         |         |              |-> Frecuencia en Hz
+													|         |         |         |-> Ciclo de trabajo en %
+													|         |         |-> Potencia maxima en W
+													|         |-> Ancho de escaneo en centesimas de mm
+													|-> Velocidad de escaneo en decimas de mm por segundo
+
+				 |0x5a|0xa5|0x05|0x82|0x15|0x01|0x00|0x3c|
+				                                ---------
+												    |-> Velocidad de alimentacion del cable en cm/min
+
+				 |0x5a|0xa5|0x31|0x82|0x16|0x0d|0x00|0x00|0x00|0x10|0x00|0x01|0x00|0x1e|0x00|0x28|0x00|0x32|
+                                                ---------
+													|-> Seleccion Parametros comunes / Banco de procesos
+													    |0x00|0x00| -> Parametros comunes
+														|0x00|0x01| -> Banco de procesos
+
+				 |0x00|0x3c|0x00|0x46|0x00|0x50|0x00|0x2a|0x00|0x82|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				 |0x00|0x00|0x00|0x01|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x01|
+
+Pantalla de parametros -> Al presionar el boton "Acero al carbono"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x16|0x01|0x01|0x00|0x00|
+
+	REF. 3
+	RESPUESTA -> |0x5a|0xa5|0x0f|0x82|0x10|0x40|0x0b|0xc2|0x01|0x5e|0x02|0xbc|0x00|0x44|0x00|0x00|0x07|0xcf|
+												--------- --------- --------- --------- -------------------
+													|         |         |         |              |-> Frecuencia en Hz
+													|         |         |         |-> Ciclo de trabajo en %
+													|         |         |-> Potencia maxima en W
+													|         |-> Ancho de escaneo en centesimas de mm
+													|-> Velocidad de escaneo en decimas de mm por segundo
+
+				 |0x5a|0xa5|0x05|0x82|0x15|0x01|0x00|0x3c|
+				                                ---------
+												    |-> Velocidad de alimentacion del cable en cm/min
+
+				 |0x5a|0xa5|0x31|0x82|0x16|0x0d|0x00|0x01|0x00|0x0c|0x00|0x00|0x00|0x0a|0x00|0x14|0x00|0x1e|
+                                                --------- --------- --------- --------- --------- ---------
+												    |         |         |         |         |         |-> Tercer Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+												    |         |         |         |         |-> Segundo Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+												    |         |         |         |-> Primer Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+													|         |         |-> Boton redondo situado a la derecha de "Diametro del alambre de soldadura"
+													|         |             |0x00|0x00| -> *1
+													|         |             |0x00|0x01| -> *2
+												    |         |-> Diametro del alambre de soldadura en decimas de mm
+													|-> Seleccion Parametros comunes / Banco de procesos
+													    |0x00|0x00| -> Parametros comunes
+														|0x00|0x01| -> Banco de procesos
+
+				 |0x00|0x28|0x00|0x32|0x00|0x3c|0x00|0x0a|0x00|0x14|0x00|0x01|0x00|0x00|0x00|0x00|0x00|0x00|
+				  --------- --------- ---------                     --------- --------- --------- ---------
+				      |         |         |                             |         |         |         |-> Seleccion de material "otros"
+					  |         |         |                             |         |         |             |0x00|0x00| -> No seleccionado
+					  |         |         |                             |         |         |             |0x00|0x01| -> Seleccionado
+					  |         |         |                             |         |         |-> Seleccion de material "Aluminio"
+					  |         |         |                             |         |             |0x00|0x00| -> No seleccionado
+					  |         |         |                             |         |             |0x00|0x01| -> Seleccionado
+					  |         |         |                             |         |-> Seleccion de material "Acero inoxidable"
+					  |         |         |                             |             |0x00|0x00| -> No seleccionado
+					  |         |         |                             |             |0x00|0x01| -> Seleccionado
+					  |         |         |                             |-> Seleccion de material "Acero al carbono"
+					  |         |         |                                 |0x00|0x00| -> No seleccionado
+					  |         |         |                                 |0x00|0x01| -> Seleccionado
+				      |         |         |-> Sexto Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+				      |         |-> Quinto Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+				      |-> Cuarto Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+				 
+				 |0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x01|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				                      --------- --------- --------- --------- --------- ---------
+									      |         |         |         |         |         |-> Seleccion del sexto Edit Box "Espesor mm" de "Banco de procesos"
+										  |         |         |         |         |             |0x00|0x00| -> No seleccionado
+										  |         |         |         |         |             |0x00|0x01| -> Seleccionado
+										  |         |         |         |         |-> Seleccion del quinto Edit Box "Espesor mm" de "Banco de procesos"
+										  |         |         |         |             |0x00|0x00| -> No seleccionado
+										  |         |         |         |             |0x00|0x01| -> Seleccionado
+										  |         |         |         |-> Seleccion del cuarto Edit Box "Espesor mm" de "Banco de procesos"
+										  |         |         |             |0x00|0x00| -> No seleccionado
+										  |         |         |             |0x00|0x01| -> Seleccionado
+										  |         |         |-> Seleccion del tercer Edit Box "Espesor mm" de "Banco de procesos"
+										  |         |             |0x00|0x00| -> No seleccionado
+										  |         |             |0x00|0x01| -> Seleccionado
+										  |         |-> Seleccion del segundo Edit Box "Espesor mm" de "Banco de procesos"
+										  |             |0x00|0x00| -> No seleccionado
+										  |             |0x00|0x01| -> Seleccionado
+										  |-> Seleccion del primer Edit Box "Espesor mm" de "Banco de procesos"
+										      |0x00|0x00| -> No seleccionado
+											  |0x00|0x01| -> Seleccionado
+
+Pantalla de parametros -> Al presionar el boton "Acero inoxidable"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x16|0x01|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 3
+
+Pantalla de parametros -> Al presionar el boton "Aluminio"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x16|0x01|0x01|0x00|0x02|
+	RESPUESTA -> Misma respuesta que REF. 3
+
+Pantalla de parametros -> Al presionar el boton "otros"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x16|0x01|0x01|0x00|0x03|
+	RESPUESTA -> Misma respuesta que REF. 3
+
+Pantalla de parametros -> Al seleccionar el primer Edit Box "Espesor mm" de "Banco de procesos"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x16|0x1e|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 3
+
+Pantalla de parametros -> Al seleccionar el segundo Edit Box "Espesor mm" de "Banco de procesos"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x16|0x1f|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 3
+
+Pantalla de parametros -> Al seleccionar el tercer Edit Box "Espesor mm" de "Banco de procesos"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x16|0x20|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 3
+
+Pantalla de parametros -> Al seleccionar el cuarto Edit Box "Espesor mm" de "Banco de procesos"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x16|0x21|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 3
+
+Pantalla de parametros -> Al seleccionar el quinto Edit Box "Espesor mm" de "Banco de procesos"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x16|0x22|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 3
+
+Pantalla de parametros -> Al seleccionar el sexto Edit Box "Espesor mm" de "Banco de procesos"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x16|0x23|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 3
+
+Pantalla de parametros -> Al fijar un valor en el primer Edit Box "Espesor mm" de "Banco de procesos"
+
+	Nota: Fijamos este valor a 3.0 mm
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x16|0x10|0x01|0x00|0x1e|
+	                                                 ---------
+										                 |-> Espesor en decimas de mm
+
+	REF. 4
+	RESPUESTA -> |0x5a|0xa5|0x0f|0x82|0x16|0x10|0x00|0x1e|0x00|0x28|0x00|0x32|0x00|0x3c|0x00|0x46|0x00|0x50|
+                                                --------- --------- --------- --------- --------- ---------
+                                                    |         |         |         |         |         |-> Valor del sexto Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+													|         |         |         |         |-> Valor del quinto Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+													|         |         |         |-> Valor del cuarto Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+													|         |         |-> Valor del tercer Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+													|         |-> Valor del segundo Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+													|-> Valor del primer Edit Box "Espesor mm" de "Banco de procesos" en decimas de mm
+	
+
+Pantalla de parametros -> Al fijar un valor en el segundo Edit Box "Espesor mm" de "Banco de procesos"
+
+	Nota: Fijamos este valor a 4.0 mm
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x16|0x11|0x01|0x00|0x28|
+	                                                 ---------
+										                 |-> Espesor en decimas de mm
+
+	RESPUESTA -> Misma respuesta que REF. 4
+
+Pantalla de parametros -> Al fijar un valor en el tercer Edit Box "Espesor mm" de "Banco de procesos"
+
+	Nota: Fijamos este valor a 5.0 mm
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x16|0x12|0x01|0x00|0x32|
+	                                                 ---------
+										                 |-> Espesor en decimas de mm
+
+	RESPUESTA -> Misma respuesta que REF. 4
+
+Pantalla de parametros -> Al fijar un valor en el cuarto Edit Box "Espesor mm" de "Banco de procesos"
+
+	Nota: Fijamos este valor a 6.0 mm
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x16|0x13|0x01|0x00|0x3c|
+	                                                 ---------
+										                 |-> Espesor en decimas de mm
+
+	RESPUESTA -> Misma respuesta que REF. 4
+
+Pantalla de parametros -> Al fijar un valor en el quinto Edit Box "Espesor mm" de "Banco de procesos"
+
+	Nota: Fijamos este valor a 7.0 mm
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x16|0x14|0x01|0x00|0x46|
+	                                                 ---------
+										                 |-> Espesor en decimas de mm
+
+	RESPUESTA -> Misma respuesta que REF. 4
+
+Pantalla de parametros -> Al fijar un valor en el sexto Edit Box "Espesor mm" de "Banco de procesos"
+
+	Nota: Fijamos este valor a 8.0 mm
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x16|0x15|0x01|0x00|0x50|
+	                                                 ---------
+										                 |-> Espesor en decimas de mm
+
+	RESPUESTA -> Misma respuesta que REF. 4
+
+Pantalla de parametros -> Tipo de soldadura por puntos -> Al ponerlo en "Escamas de pescado"
+
+	COMANDO   -> Mismo comando que REF. 16
+	RESPUESTA -> Misma respuesta que REF. 7
+
+Pantalla de parametros -> Tipo de soldadura por puntos -> Al ponerlo en "Intervalo"
+
+	COMANDO   -> Mismo comando que REF. 17
+	RESPUESTA -> Misma respuesta que REF. 7
+
+Pantalla de parametros -> Al fijar un valor en el Edit Box "Duracion de la soldadura por puntos"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0xce|0x01|0x01|0xf6|
+	                                                 ---------
+													     |-> Duracion de la soldadura por puntos en ms
+	
+	RESPUESTA -> Misma respuesta que REF. 7
+
+Pantalla de parametros -> Al fijar un valor en el Edit Box "Intervalo de soldadura por puntos"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0xcf|0x01|0x01|0xf7|
+	                                                 ---------
+													     |-> Intervalo de soldadura por puntos en ms
+	
+	RESPUESTA -> Misma respuesta que REF. 7
+
+Pantalla de parametros -> Al presionar el boton "Ayuda"
+
+	No envia ninguna trama
+	
+	Pantalla de ayuda -> Al presionar el boton "X" situado en la esquina superior derecha
+	
+		COMANDO   -> |0x5a|0xa5|0x06|0x83|0x51|0x01|0x01|0x00|0x01|
+		RESPUESTA -> Misma respuesta que REF. 5 si tenemos "Parametros comunes" seleccionado o
+		             misma respuesta que REF. 6 si tenemos "Banco de procesos" seleccionado
+	
+	Nota: En la pantalla de "Ayuda" existen ademas otros dos botones, llamados "Guardar los parametros de fabrica"
+	      y "Restaurar los parametros de fabrica" de los que no hemos capturado las tramas para no alterar los
+		  datos.
+
+Pantalla de parametros -> Al presionar el boton "Volver"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x51|0x12|0x01|0x00|0x01|
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla de ajustes -> Tipo de soldadura por puntos -> Al ponerlo en "Intervalo"
+
+	REF. 17
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0xd0|0x01|0x00|0x00|
+
+	REF. 7
+	RESPUESTA -> |0x5a|0xa5|0x35|0x82|0x12|0xc0|0x05|0xdc|0x00|0xc9|0x00|0xc8|0x00|0x6e|0x00|0x33|0x02|0x8a|
+                                                --------- --------- --------- --------- --------- ---------
+												    |         |         |         |         |         |-> Umbral de temperatura de accionamiento del motor en decimas de ºC
+												    |         |         |         |         |-> Desplazamiento del centro del laser en centesimas de mm
+												    |         |         |         |-> Correccion de la exploracion x 100
+												    |         |         |-> Retraso de gas apagado en ms
+												    |         |-> Retraso de gas abierto en ms
+												    |-> Potencia del laser en W
+		
+	             |0x00|0x00|0x00|0x00|0x04|0xd2|0x00|0x1e|0x01|0xf4|0x00|0x00|0x00|0x50|0x01|0xf5|0x01|0xf6|
+				  --------- --------- --------- --------- --------- --------- --------- --------- ---------
+                      |         |         |         |         |         |         |         |         |-> Duracion de la soldadura por puntos en ms
+                      |         |         |         |         |         |         |         |-> Tiempo progresivo de apagado del laser en ms
+                      |         |         |         |         |         |         |-> Laser apagado en %
+					  |         |         |         |         |         |-> Nivel de alarma de presion
+					  |         |         |         |         |             |0x00|0x00| -> Bajo
+					  |         |         |         |         |             |0x00|0x01| -> Alto
+                      |         |         |         |         |-> Laser en tiempo progresivo en ms
+                      |         |         |         |-> Potencia de arranque del laser en %
+                      |         |         |-> Retraso del hilo de soldadura en ms
+					  |         |-> Nivel de alarma del enfriador
+					  |             |0x00|0x00| -> Bajo
+					  |             |0x00|0x01| -> Alto
+					  |-> Nivel de alarma laser
+						  |0x00|0x00| -> Bajo
+						  |0x00|0x01| -> Alto
+					 
+				 |0x01|0xf7|0x00|0x00|0x00|0x09|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x02|0x00|0x01|0x02|0x44|
+				  --------- --------- ---------                                                   ---------
+				      |         |         |                                                           |-> Umbral de temperatura del espejo protector en decimas de ºC
+					  |         |         |-> Idioma
+					  |         |             |0x00|0x00| -> Chino
+					  |         |             |0x00|0x01| -> Ingles
+					  |         |             |0x00|0x02| -> Coreano
+					  |         |             |0x00|0x03| -> Ruso
+					  |         |             |0x00|0x04| -> Chino tradicional
+					  |         |             |0x00|0x05| -> Japones
+					  |         |             |0x00|0x06| -> Aleman
+					  |         |             |0x00|0x07| -> Frances
+					  |         |             |0x00|0x08| -> Italiano
+					  |         |             |0x00|0x09| -> Español
+					  |         |             |0x00|0x0a| -> Portugues
+					  |         |             |0x00|0x0b| -> Turco
+					  |         |             |0x00|0x0c| -> Griego
+					  |         |             |0x00|0x0d| -> Checo
+					  |         |             |0x00|0x0e| -> Eslovaco
+					  |         |             |0x00|0x0f| -> Polaco
+					  |         |             |0x00|0x10| -> Tailandes
+					  |         |             |0x00|0x11| -> Vietnamita
+					  |         |             |0x00|0x12| -> Rumano
+					  |         |-> Tipo de soldadura por puntos
+					  |             |0x00|0x00| -> Intervalo
+					  |             |0x00|0x01| -> Escamas de pescado
+				      |-> Intervalo de soldadura por puntos en ms
+					 
+				 |0x02|0x4e|
+				  ---------
+				      |-> Umbral de temperatura del colimador en decimas de ºC
+
+Pantalla de ajustes -> Tipo de soldadura por puntos -> Al ponerlo en "Escamas de pescado"
+
+	REF. 16
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0xd0|0x01|0x00|0x01|
+	
+	RESPUESTA -> Misma respuesta que REF. 7
+
+Pantalla de ajustes -> Nivel de alarma laser -> Al ponerlo en "Alto"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0xc6|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 7 + Misma respuesta que REF. 1
+
+Pantalla de ajustes -> Nivel de alarma laser -> Al ponerlo en "Bajo"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0xc6|0x01|0x00|0x00|
+	RESPUESTA -> Misma respuesta que REF. 7 + Misma respuesta que REF. 1
+
+Pantalla de ajustes -> Nivel de alarma del enfriador -> Al ponerlo en "Alto"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0xc7|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 7 + Misma respuesta que REF. 1
+
+Pantalla de ajustes -> Nivel de alarma del enfriador -> Al ponerlo en "Bajo"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0xc7|0x01|0x00|0x00|
+	RESPUESTA -> Misma respuesta que REF. 7 + Misma respuesta que REF. 1
+
+Pantalla de ajustes -> Nivel de alarma de presion -> Al ponerlo en "Alto"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0xcb|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 7
+
+Pantalla de ajustes -> Nivel de alarma de presion -> Al ponerlo en "Bajo"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0xcb|0x01|0x00|0x00|
+	RESPUESTA -> Misma respuesta que REF. 7
+
+Pantalla de ajustes -> Al presionar el boton "Idioma"
+
+	No envia ninguna trama
+	
+	Nota: Abre un popup para seleccionar el idioma
+
+Pantalla de ajustes -> Idioma -> Al ponerlo en "Ingles"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0xd1|0x01|0x00|0x01|
+	                                                 ---------
+	                                                     |-> Idioma
+															 |0x00|0x00| -> Chino
+															 |0x00|0x01| -> Ingles
+															 |0x00|0x02| -> Coreano
+															 |0x00|0x03| -> Ruso
+															 |0x00|0x04| -> Chino tradicional
+															 |0x00|0x05| -> Japones
+															 |0x00|0x06| -> Aleman
+															 |0x00|0x07| -> Frances
+															 |0x00|0x08| -> Italiano
+															 |0x00|0x09| -> Español
+															 |0x00|0x0a| -> Portugues
+															 |0x00|0x0b| -> Turco
+															 |0x00|0x0c| -> Griego
+															 |0x00|0x0d| -> Checo
+															 |0x00|0x0e| -> Eslovaco
+															 |0x00|0x0f| -> Polaco
+															 |0x00|0x10| -> Tailandes
+															 |0x00|0x11| -> Vietnamita
+															 |0x00|0x12| -> Rumano
+
+	(al ponerlo en Chino)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x02|
+	             |0x5a|0xa5|0x0b|0x82|0x00|0xb0|0x5a|0xa5|0x00|0x01|0x0b|0x05|0x00|0x01|
+
+	(al ponerlo en Ingles)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x1c|
+	
+	(al ponerlo en Coreano)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x34|
+
+	(al ponerlo en Ruso)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x4c|
+
+	(al ponerlo en Chino tradicional)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0xdc|
+
+	(al ponerlo en Japones)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x01|0x11|
+
+	(al ponerlo en Aleman)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x01|0x46|
+
+	(al ponerlo en Frances)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x01|0x7b|
+
+	(al ponerlo en Italiano)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x01|0xb0|
+
+	(al ponerlo en Español)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x01|0xe5|
+
+	(al ponerlo en Portugues)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x02|0x1a|
+
+	(al ponerlo en Turco)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x02|0x4f|
+
+	(al ponerlo en Griego)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x02|0x84|
+
+	(al ponerlo en Checo)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x02|0xb9|
+
+	(al ponerlo en Eslovaco)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x02|0xee|
+
+	(al ponerlo en Polaco)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x03|0x23|
+
+	(al ponerlo en Tailandes)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x03|0x58|
+
+	(al ponerlo en Vietnamita)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x03|0x8d|
+
+	(al ponerlo en Rumano)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x03|0xc2|
+
+Pantalla de ajustes -> Al presionar el boton "Guardar"
+
+	Nota: Los parametros que aparecen en la pantalla son estos.
+	
+		Potencia del laser = 1500 W
+		Retraso de gas abierto = 201 ms
+		Retraso de gas apagado = 200 ms
+		Potencia de arranque del laser = 30 %
+		Laser en tiempo progresivo = 500 ms
+		Laser apagado = 80 %
+		Tiempo progresivo de apagado del laser = 501 ms
+		Retraso del hilo de soldadura = 1234 ms
+		Correccion de la exploracion = 1.10
+		Desplazamiento del centro del laser = 0.51 mm
+		Duracion de la soldadura por puntos = 502 ms
+		Intervalo de soldadura por puntos = 503 ms
+		Umbral de temperatura de accionamiento del motor = 65.0 ºC
+		Umbral de temperatura del espejo protector = 58.0 ºC
+		Umbral de temperatura del colimador = 59.0 ºC
+		Tipo de soldadura por puntos = Escamas de pescado
+		Nivel de alarma laser = Bajo
+		Nivel de alarma del enfriador = Bajo
+		Nivel de alarma de presion = Bajo
+
+	Nota: En la trama aparecen ciertos parametros que no aparecen en pantalla en este modo de
+	      funcionamiento, pero si en el modo de "Sistemas de limpieza por laser". Son estos.
+
+		Ajuste de la activacion
+
+	COMANDO   -> |0x5a|0xa5|0x36|0x83|0x12|0xc0|0x19|0x05|0xdc|0x00|0xc9|0x00|0xc8|
+                                                     --------- --------- ---------
+										                 |         |         |-> Retraso de gas apagado en ms
+											             |         |-> Retraso de gas abierto en ms
+											             |-> Potencia del laser en W
+
+	             |0x00|0x6e|0x00|0x33|0x02|0x8a|0x00|0x00|0x00|0x00|0x04|0xd2|0x00|0x1e|
+	              --------- --------- --------- --------- --------- --------- ---------
+	                  |         |         |         |         |         |         |-> Potencia de arranque del laser en %
+	                  |         |         |         |         |         |-> Retraso del hilo de soldadura en ms
+		              |         |         |         |         |-> Nivel de alarma del enfriador
+		              |         |         |         |             |0x00|0x00| -> Bajo
+		              |         |         |         |             |0x00|0x01| -> Alto
+		              |         |         |         |-> Nivel de alarma laser
+		              |         |         |             |0x00|0x00| -> Bajo
+		              |         |         |             |0x00|0x01| -> Alto
+	                  |         |         |-> Umbral de temperatura de accionamiento del motor en decimas de ºC
+		              |         |-> Desplazamiento del centro del laser en centesimas de mm
+	                  |-> Coreccion de la exploracion x 100
+	
+	             |0x01|0xf4|0x00|0x00|0x00|0x50|0x01|0xf5|0x01|0xf6|0x01|0xf7|0x00|0x01|
+	              --------- --------- --------- --------- --------- --------- ---------
+	                  |         |         |         |         |         |         |-> Tipo de soldadura por puntos
+		              |         |         |         |         |         |             |0x00|0x01| -> Escamas de pescado
+		              |         |         |         |         |         |             |0x00|0x00| -> Intervalo
+	                  |         |         |         |         |         |-> Intervalo de soldadura por puntos en ms
+	                  |         |         |         |         |-> Duracion de la soldadura por puntos en ms
+	                  |         |         |         |-> Tiempo progresivo de apagado del laser en ms
+	                  |         |         |-> Laser apagado en %
+		              |         |-> Nivel de alarma de presion
+		              |             |0x00|0x00| -> Bajo
+		              |             |0x00|0x01| -> Alto
+	                  |-> Laser en tiempo progresivo en ms
+
+	             |0x00|0x09|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x01|0x02|0x44|
+	                                                                --------- ---------
+                                                                        |         |-> Umbral de temperatura del espejo protector en decimas de ºC
+                                                                        |-> Ajuste de la activacion
+                                                                            |0x00|0x00| -> Haga clic en
+                                                                            |0x00|0x01| -> Doble clic
+
+	             |0x02|0x4e|
+	              ---------
+	                  |-> Umbral de temperatura del colimador en decimas de ºC
+	
+	RESPUESTA -> Misma respuesta que REF. 7 + Misma respuesta que REF. 1
+
+Pantalla de ajustes -> Al presionar el boton "Ayuda"
+
+	No envia ninguna trama
+	
+	Pantalla de ayuda -> Al presionar el boton "X" situado en la esquina superior derecha
+	
+		No envia ninguna trama
+	
+	Nota: En la pantalla de "Ayuda" existe ademas otro boton, llamado "Restablecimiento de fabrica"
+	      del que no hemos capturado la trama para no alterar los datos.
+
+Pantalla de ajustes -> Al presionar el boton "Volver"
+
+	No envia ninguna trama
+
+Pantalla de monitor -> Al presionar el boton "Diagnostico"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x51|0x09|0x01|0x00|0x01|
+	RESPUESTA -> Parece que no recibe ninguna trama a parte de las que se reciben repetidamente en la pantalla de monitor
+
+	Pantalla de confirmacion de entrada en modo de diagnostico de apagado -> Al presionar el boton "Volver"
+	
+		COMANDO   -> |0x5a|0xa5|0x06|0x83|0x51|0x02|0x01|0x00|0x01|
+		RESPUESTA -> Parece que no recibe ninguna trama a parte de las que se reciben repetidamente en la pantalla de monitor
+	
+	Pantalla de confirmacion de entrada en modo de diagnostico de apagado -> Al presionar el boton "Continuar"
+
+		COMANDO   -> |0x5a|0xa5|0x06|0x83|0x51|0x07|0x01|0x00|0x01|
+
+		REF. 8
+		RESPUESTA -> |0x5a|0xa5|0x1f|0x82|0x11|0x3a|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+		                                            --------- --------- --------- --------- --------- ---------
+													    |         |         |         |         |         |-> Estado del "Control del interruptor" de "Señal de habilitacion del laser"
+														|         |         |         |         |             |0x00|0x00| -> OFF
+														|         |         |         |         |             |0x00|0x01| -> EN
+													    |         |         |         |         |-> Voltaje de "Valor de deteccion" de "Señal de habilitacion del laser" en decimas de voltio
+													    |         |         |         |-> Voltaje de "Valor de salida teorico" de "Señal de habilitacion del laser" en decimas de voltio
+													    |         |         |-> Estado del "Control del interruptor" de "PWM"
+														|         |             |0x00|0x00| -> OFF
+														|         |             |0x00|0x01| -> EN
+													    |         |-> Voltaje de "Valor de deteccion" de "PWM" en decimas de voltio
+													    |-> Voltaje de "Valor de salida teorico" de "PWM" en decimas de voltio
+		             
+					 |0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+					  --------- --------- --------- --------- --------- --------- --------- ---------
+					      |         |         |         |         |         |         |         |-> Estado del "Control del interruptor" de "Señal de habilitacion de la alimentacion del cable"
+						  |         |         |         |         |         |         |             |0x00|0x00| -> OFF
+						  |         |         |         |         |         |         |             |0x00|0x01| -> EN
+					      |         |         |         |         |         |         |-> "Valor de salida teorico" de "Señal de habilitacion de la alimentacion del cable"
+						  |         |         |         |         |         |             |0x00|0x00| -> Led no activado
+						  |         |         |         |         |         |             |0x00|0x01| -> Led activado
+					      |         |         |         |         |         |-> Estado del "Control del interruptor" de "Tension analogica"
+						  |         |         |         |         |             |0x00|0x00| -> OFF
+						  |         |         |         |         |             |0x00|0x01| -> EN
+					      |         |         |         |         |-> Voltaje de "Valor de deteccion" de "Tension analogica" en decimas de voltio
+					      |         |         |         |-> Voltaje de "Valor de salida teorico" de "Tension analogica" en decimas de voltio
+					      |         |         |-> Estado del "Control del interruptor" de "Señal de habilitacion de la valvula de gas"
+						  |         |             |0x00|0x00| -> OFF
+						  |         |             |0x00|0x01| -> EN
+					      |         |-> Voltaje de "Valor de deteccion" de "Señal de habilitacion de la valvula de gas" en decimas de voltio
+					      |-> Voltaje de "Valor de salida teorico" de "Señal de habilitacion de la valvula de gas" en decimas de voltio
+		             
+					 + Esta misma trama de respuesta repetida continuamente
+
+Pantalla de monitor -> Al presionar el boton "Volver"
+
+	No envia ninguna trama
+
+Pantalla de diagnostico -> Al poner el control del interruptor "PWM" en "EN"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x11|0x30|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 8
+
+Pantalla de diagnostico -> Al poner el control del interruptor "PWM" en "OFF"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x11|0x30|0x01|0x00|0x00|
+	RESPUESTA -> Misma respuesta que REF. 8
+
+Pantalla de diagnostico -> Al poner el control del interruptor "Señal de habilitacion del laser" en "EN"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x11|0x31|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 8
+
+Pantalla de diagnostico -> Al poner el control del interruptor "Señal de habilitacion del laser" en "OFF"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x11|0x31|0x01|0x00|0x00|
+	RESPUESTA -> Misma respuesta que REF. 8
+
+Pantalla de diagnostico -> Al poner el control del interruptor "Señal de habilitacion de la valvula de gas" en "EN"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x11|0x32|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 8
+
+Pantalla de diagnostico -> Al poner el control del interruptor "Señal de habilitacion de la valvula de gas" en "OFF"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x11|0x32|0x01|0x00|0x00|
+	RESPUESTA -> Misma respuesta que REF. 8
+
+Pantalla de diagnostico -> Al poner el control del interruptor "Tension analogica" en "EN"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x11|0x33|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 8
+
+Pantalla de diagnostico -> Al poner el control del interruptor "Tension analogica" en "OFF"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x11|0x33|0x01|0x00|0x00|
+	RESPUESTA -> Misma respuesta que REF. 8
+
+Pantalla de diagnostico -> Al poner el control del interruptor "Señal de habilitacion de la alimentacion del cable" en "EN"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x11|0x34|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 8
+
+Pantalla de diagnostico -> Al poner el control del interruptor "Señal de habilitacion de la alimentacion del cable" en "OFF"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x11|0x34|0x01|0x00|0x00|
+	RESPUESTA -> Misma respuesta que REF. 8
+
+Pantalla de diagnostico -> Al presionar el boton "Volver"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x51|0x08|0x01|0x00|0x01|
+	RESPUESTA -> Parece que no recibe ninguna trama a parte de las que se reciben repetidamente en la pantalla de monitor
+
+-------------------------------------------------------------------------------
+SISTEMAS DE LIMPIEZA POR LASER
+-------------------------------------------------------------------------------
+
+Al dar alimentacion a la placa
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x20|0x02|0x01|0x00|0x03|
+	             |0x5a|0xa5|0x06|0x83|0x20|0x08|0x01|0x00|0x13|
+	             |0x5a|0xa5|0x06|0x83|0x20|0x06|0x01|0x00|0x02|
+	             |0x5a|0xa5|0x06|0x83|0x10|0xe0|0x01|0x03|0x24|
+	             |0x5a|0xa5|0x06|0x83|0x20|0x07|0x01|0x00|0x02|
+	             |0x5a|0xa5|0x06|0x83|0x16|0x00|0x01|0x00|0x01|
+	             |0x5a|0xa5|0x06|0x83|0x16|0x00|0x01|0x00|0x01|
+	             |0x5a|0xa5|0x06|0x83|0x20|0x0d|0x01|0x00|0x00|
+	
+	RESPUESTA -> |0x5a|0xa5|0x04|0x83|0x20|0x02|0x01|
+	             |0x5a|0xa5|0x04|0x83|0x20|0x02|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x02|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x02|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x02|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x02|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x02|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x08|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x06|0x01|
+				 
+				 + Misma respuesta que REF. 9
+				 
+				 |0x5a|0xa5|0x04|0x83|0x10|0xe0|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x07|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x16|0x00|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x16|0x00|0x01|
+				 |0x5a|0xa5|0x04|0x83|0x20|0x0d|0x01|
+				 
+				 + Misma respuesta que REF. 9
+				 
+				 |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x02|0x01|
+				 |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x02|0x01|
+				 |0x5a|0xa5|0x05|0x82|0x50|0x00|0xff|0x00|
+				 
+				 + Misma respuesta que REF. 9
+				 + Misma respuesta que REF. 13
+				 + Misma respuesta que REF. 11
+				 + Misma respuesta que REF. 12
+				 + Misma respuesta que REF. 10
+				 
+                 |0x5a|0xa5|0x0f|0x82|0x10|0x70|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+                 |0x5a|0xa5|0x0f|0x82|0x10|0x80|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				 |0x5a|0xa5|0x0f|0x82|0x10|0x90|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				 |0x5a|0xa5|0x0f|0x82|0x10|0xa0|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				 |0x5a|0xa5|0x0f|0x82|0x10|0xb0|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				 |0x5a|0xa5|0x0f|0x82|0x10|0xc0|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				 |0x5a|0xa5|0x0f|0x82|0x10|0xd0|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+
+				 + Misma respuesta que REF. 9
+				 
+				 |0x5a|0xa5|0x25|0x82|0x15|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				 |0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x02|0x00|0x01|0x00|0x00|0x00|0x00|0x00|0x00|
+
+Pantalla principal -> Activacion del laser -> Al ponerlo en "OFF"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x0b|0x01|0x00|0x00|
+
+	REF. 9
+	RESPUESTA -> |0x5a|0xa5|0x3d|0x82|0x10|0x01|0x00|0x33|0x01|0x2c|0x01|0xf4|0x00|0x64|0x00|0x01|
+	                                            --------- --------- --------- ---------
+												    |         |         |         |-> Ciclo de trabajo en %
+												    |         |         |-> Potencia maxima en W
+												    |         |-> Ancho de escaneo en centesimas de mm
+												    |-> Frecuencia de escaneo en Hz
+				 
+				 |0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x01|0x00|0x00|0x00|0x01|0x00|0x00|
+				  ---------           --------- ---------           --------- ---------
+                      |                   |         |                   |         |-> Luz roja
+                      |                   |         |                   |             |0x00|0x00| -> DOT
+                      |                   |         |                   |             |0x00|0x01| -> LINEA
+                      |                   |         |                   |-> Activacion del laser
+                      |                   |         |                       |0x00|0x00| -> OFF
+                      |                   |         |                       |0x00|0x01| -> EN
+					  |                   |         |-> Indicador de alarma del refrigerador
+					  |                   |             |0x00|0x00| -> Alarma del refrigerador no activada
+					  |                   |             |0x00|0x01| -> Alarma del refrigerador activada
+					  |                   |-> Indicador de alarma laser
+					  |                       |0x00|0x00| -> Alarma laser no activada
+					  |                       |0x00|0x01| -> Alarma laser activada
+					  |-> Indicador de alarma
+					      |0x00|0x00| -> Ninguna alarma activa
+						  |0x00|0x02| -> Alguna alarma activa
+
+				 |0x00|0x00|0x07|0xd0|0x00|0x02|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				  -------------------
+				           |-> Frecuencia en Hz
+				 
+				 |0x00|0x01|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+
+Pantalla principal -> Activacion del laser -> Al ponerlo en "EN"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x0b|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 9
+
+Pantalla principal -> Luz roja -> Al ponerlo en "DOT"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x0c|0x01|0x00|0x00|
+	RESPUESTA -> Misma respuesta que REF. 9
+
+Pantalla principal -> Luz roja -> Al ponerlo en "LINEA"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x10|0x0c|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 9
+
+Pantalla principal -> Al presionar el boton redondo con dos flechas situado en la esquina superior derecha
+
+	No envia ninguna trama
+
+	Pantalla de confirmacion de entrada en el modo "Sistema de soldadura laser" -> Al presionar el boton "Continuar"
+
+		COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0x00|0x01|0x00|0x00|
+		RESPUESTA -> Misma respuesta que REF. 9 + |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x01|0xff|
+		
+		Nota: Despues de enviar esta trama, aparece una pantalla con el mensaje
+			  "Por favor, apague y reinicie."
+
+Pantalla principal -> Al presionar el boton "Parametros"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x51|0x01|0x01|0x00|0x01|
+
+	RESPUESTA -> Misma respuesta que REF. 11
+				 + Misma respuesta que REF. 12
+                 + Misma respuesta que REF. 10
+
+                 |0x5a|0xa5|0x0f|0x82|0x10|0x70|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+                 |0x5a|0xa5|0x0f|0x82|0x10|0x80|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				 |0x5a|0xa5|0x0f|0x82|0x10|0x90|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				 |0x5a|0xa5|0x0f|0x82|0x10|0xa0|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				 |0x5a|0xa5|0x0f|0x82|0x10|0xb0|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				 |0x5a|0xa5|0x0f|0x82|0x10|0xc0|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				 |0x5a|0xa5|0x0f|0x82|0x10|0xd0|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				 
+				 |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x02|0x05|
+				                                          ---------
+															  |-> Parametro seleccionado
+																  |0x02|0x05| -> "Parametro 1" seleccionado
+																  |0x02|0x06| -> "Parametro 2" seleccionado
+																  |0x02|0x07| -> "Parametros comunes" seleccionado
+
+Pantalla principal -> Al presionar el boton "Ajustes"
+
+	No envia ninguna trama
+
+	Pantalla de password para acceder a la pantalla de ajustes -> Despues de introducir un password incorrecto y confirmarlo
+
+		COMANDO   -> |0x5a|0xa5|0x08|0x83|0x10|0x19|0x02|0x00|0x01|0xe2|0x35|
+											             -------------------
+													              |-> Password incorrecto (123445)
+
+        RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x02|0x09|
+
+	Pantalla de password para acceder a la pantalla de ajustes -> Despues de introducir el password correcto "123456" y confirmarlo
+
+		COMANDO   -> |0x5a|0xa5|0x08|0x83|0x10|0x19|0x02|0x00|0x01|0xe2|0x40|
+											             -------------------
+													              |-> Password
+													 
+		RESPUESTA -> Misma respuesta que REF. 13 + |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x02|0x03|
+
+Pantalla principal -> Al presionar el boton "Monitor"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x51|0x02|0x01|0x00|0x01|
+
+	RESPUESTA -> |0x5a|0xa5|0x23|0x82|0x10|0x30|0x00|0x01|0x00|0x01|0x00|0x01|0x00|0x01|0x00|0x01|0x00|0x00|
+                                                --------- ---------           --------- ---------
+												    |         |                   |         |-> Señal de alarma de la presion del aire (Entrada)
+													|         |                   |             |0x00|0x00| -> Contacto cerrado entre conector "Signal Interface 1 - Pin 2" y conector "Signal Interface 1 - Pin 1"
+													|         |                   |             |0x00|0x01| -> Contacto abierto
+												    |         |                   |-> Señal de alarma del enfriador de agua (Entrada)
+													|         |                       |0x00|0x00| -> Contacto cerrado entre conector "Signal Interface 1 - Pin 4" y conector "Signal Interface 1 - Pin 3"
+													|         |                       |0x00|0x01| -> Contacto abierto
+													|         |-> Señal de alarma laser (Entrada)
+													|             |0x00|0x00| -> Contacto cerrado entre conector "Signal Interface 3 - Pin 1" y conector "Signal Interface 3 - Pin 4"
+													|             |0x00|0x01| -> Contacto abierto
+                                                    |-> Señal de disparo del laser (Entrada)
+                                                        |0x00|0x00| -> Contacto cerrado entre conector "Signal Interface 1 - Pin 8" y conector "Signal Interface 1 - Pin 5"
+                                                        |0x00|0x01| -> Contacto abierto
+	
+	             |0x01|0x1c|0x00|0x00|0x00|0x01|0x03|0xe7|0x01|0x73|0x4d|0x2e|0x00|0x00|0x02|0x76|0x03|0x38|0x00|0x00|
+                  ---------                               -------------------           --------- ---------
+                      |                                            |                        |         |-> Segunda parte de "System Version"
+                      |                                            |                        |-> Primera parte de "System Version"
+                      |                                            |-> Equipment number
+                      |-> Umbral de temperatura de accionamiento del motor en decimas de ºC
+				 
+				 |0x5a|0xa5|0x33|0x82|0x11|0x10|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+                                                                                                  ---------
+                                                                                                      |-> Voltaje de "PWM" en decimas de voltio (Salida)
+				 
+				 |0x00|0x00|0x00|0x00|0x00|0x00|0x00|0xf9|0x00|0x95|0xff|0x6b|0x01|0x6b|0x00|0x43|0x00|0x01|
+				  --------- --------- --------- --------- --------- --------- --------- ---------
+				      |         |         |         |         |         |         |         |-> Intensidad de "+- de alimentacion de 15V" en mA (Alimentacion)
+				      |         |         |         |         |         |         |-> Intensidad de "Corriente de alimentacion de 24V" en mA (Alimentacion)
+				      |         |         |         |         |         |-> Voltaje de "- Tension de alimentacion de 15V" en decimas de voltio (Alimentacion)
+				      |         |         |         |         |-> Voltaje de "Tension de alimentacion de +15V" en decimas de voltio (Alimentacion)
+				      |         |         |         |-> Voltaje de "Tension de alimentacion de 24V" en decimas de voltio (Alimentacion)
+				      |         |         |-> Voltaje de "Tension analogica" en decimas de voltio (salida)
+				      |         |-> Voltaje de "Señal de habilitacion de la valvula de gas" en decimas de voltio (Salida)
+				      |-> Voltaje de "Señal de habilitacion del laser" en decimas de voltio (Salida)
+				 
+				 |0x00|0x00|0x27|0x06|0x27|0x06|0x00|0x01|0x00|0x00|0x00|0x00|0x00|0x0f|0x00|0x00|0x00|0x00|
+				 
+				 + Estas dos mismas tramas de respuesta repetidas continuamente
+
+Pantalla de parametros -> Al presionar boton "Guardar" con el boton "Parametros comunes" seleccionado
+
+	Nota: Los parametros que aparecen en la pantalla son estos.
+	
+		Frecuencia de escaneo = 50 Hz
+		Ancho de escaneo = 3.00 mm
+		Potencia maxima = 500 W
+		Ciclo de trabajo = 100 %
+		Frecuencia = 2000 Hz
+
+	COMANDO   -> |0x5a|0xa5|0x10|0x83|0x30|0x60|0x06|0x00|0x32|0x01|0x2c|0x01|0xf4|0x00|0x64|0x00|0x00|0x07|0xd0|
+	                                                 --------- --------- --------- --------- -------------------
+	                                                     |         |         |         |              |-> Frecuencia en Hz
+	                                                     |         |         |         |-> Ciclo de trabajo en %
+	                                                     |         |         |-> Potencia maxima en W
+	                                                     |         |-> Ancho de escaneo en centesimas de mm
+	                                                     |-> Frecuencia de escaneo en Hz
+
+	REF. 10
+	RESPUESTA -> |0x5a|0xa5|0x0f|0x82|0x10|0x60|0x00|0x32|0x01|0x2c|0x01|0xf4|0x00|0x64|0x00|0x00|0x07|0xd0|
+												--------- --------- --------- --------- -------------------
+													|         |         |         |              |-> Frecuencia en Hz de los "Parametros comunes"
+													|         |         |         |-> Ciclo de trabajo en % de los "Parametros comunes"
+													|         |         |-> Potencia maxima en W de los "Parametros comunes"
+													|         |-> Ancho de escaneo en centesimas de mm de los "Parametros comunes"
+													|-> Frecuencia de escaneo en Hz de los "Parametros comunes"
+
+Pantalla de parametros -> Al presionar boton "Guardar" con el boton "Parametro 1" seleccionado
+
+	Nota: Los parametros que aparecen en la pantalla son estos.
+	
+		Frecuencia de escaneo = 50 Hz
+		Ancho de escaneo = 3.00 mm
+		Potencia maxima = 500 W
+		Ciclo de trabajo = 100 %
+		Frecuencia = 2000 Hz
+
+	COMANDO   -> |0x5a|0xa5|0x10|0x83|0x30|0x40|0x06|0x00|0x32|0x01|0x2c|0x01|0xf4|0x00|0x64|0x00|0x00|0x07|0xd0|
+	                                                 --------- --------- --------- --------- -------------------
+                                                         |         |         |         |              |-> Frecuencia en Hz
+                                                         |         |         |         |-> Ciclo de trabajo en %
+                                                         |         |         |-> Potencia maxima en W
+                                                         |         |-> Ancho de escaneo en centesimas de mm
+                                                         |-> Frecuencia de escaneo en Hz
+
+	REF. 11
+	RESPUESTA -> |0x5a|0xa5|0x0f|0x82|0x10|0x40|0x00|0x32|0x01|0x2c|0x01|0xf4|0x00|0x64|0x00|0x00|0x07|0xd0|
+												--------- --------- --------- --------- -------------------
+													|         |         |         |              |-> Frecuencia en Hz del "Parametro 1"
+													|         |         |         |-> Ciclo de trabajo en % del "Parametro 1"
+													|         |         |-> Potencia maxima en W del "Parametro 1"
+													|         |-> Ancho de escaneo en centesimas de mm del "Parametro 1"
+													|-> Frecuencia de escaneo en Hz del "Parametro 1"
+
+
+Pantalla de parametros -> Al presionar boton "Guardar" con el boton "Parametro 2" seleccionado
+
+	Nota: Los parametros que aparecen en la pantalla son estos.
+	
+		Frecuencia de escaneo = 50 Hz
+		Ancho de escaneo = 3.00 mm
+		Potencia maxima = 500 W
+		Ciclo de trabajo = 100 %
+		Frecuencia = 2000 Hz
+
+	COMANDO   -> |0x5a|0xa5|0x10|0x83|0x30|0x50|0x06|0x00|0x32|0x01|0x2c|0x01|0xf4|0x00|0x64|0x00|0x00|0x07|0xd0|
+	                                                 --------- --------- --------- --------- -------------------
+                                                         |         |         |         |              |-> Frecuencia en Hz
+                                                         |         |         |         |-> Ciclo de trabajo en %
+                                                         |         |         |-> Potencia maxima en W
+                                                         |         |-> Ancho de escaneo en centesimas de mm
+                                                         |-> Frecuencia de escaneo en Hz
+
+	REF. 12
+	RESPUESTA -> |0x5a|0xa5|0x0f|0x82|0x10|0x50|0x00|0x32|0x01|0x2c|0x01|0xf4|0x00|0x64|0x00|0x00|0x07|0xd0|
+												--------- --------- --------- --------- -------------------
+													|         |         |         |              |-> Frecuencia en Hz del "Parametro 2"
+													|         |         |         |-> Ciclo de trabajo en % del "Parametro 2"
+													|         |         |-> Potencia maxima en W del "Parametro 2"
+													|         |-> Ancho de escaneo en centesimas de mm del "Parametro 2"
+													|-> Frecuencia de escaneo en Hz del "Parametro 2"
+
+Pantalla de parametros -> Al presionar boton "Importar" con el boton "Parametros comunes" seleccionado
+
+	Nota: Los parametros que aparecen en la pantalla son estos.
+	
+		Frecuencia de escaneo = 50 Hz
+		Ancho de escaneo = 3.00 mm
+		Potencia maxima = 500 W
+		Ciclo de trabajo = 100 %
+		Frecuencia = 2000 Hz
+
+	COMANDO   -> |0x5a|0xa5|0x10|0x83|0x10|0x60|0x06|0x00|0x32|0x01|0x2c|0x01|0xf4|0x00|0x64|0x00|0x00|0x07|0xd0|
+	                                                 --------- --------- --------- --------- -------------------
+                                                         |         |         |         |              |-> Frecuencia en Hz
+                                                         |         |         |         |-> Ciclo de trabajo en %
+                                                         |         |         |-> Potencia maxima en W
+                                                         |         |-> Ancho de escaneo en centesimas de mm
+                                                         |-> Frecuencia de escaneo en Hz
+
+	RESPUESTA -> Misma respuesta que REF. 10 + Misma respuesta que REF. 9
+
+Pantalla de parametros -> Al presionar boton "Importar" con el boton "Parametro 1" seleccionado
+
+	Nota: Los parametros que aparecen en la pantalla son estos.
+	
+		Frecuencia de escaneo = 50 Hz
+		Ancho de escaneo = 3.00 mm
+		Potencia maxima = 500 W
+		Ciclo de trabajo = 100 %
+		Frecuencia = 2000 Hz
+
+	COMANDO   -> |0x5a|0xa5|0x10|0x83|0x10|0x40|0x06|0x00|0x32|0x01|0x2c|0x01|0xf4|0x00|0x64|0x00|0x00|0x07|0xd0|
+	                                                 --------- --------- --------- --------- -------------------
+                                                         |         |         |         |              |-> Frecuencia en Hz
+                                                         |         |         |         |-> Ciclo de trabajo en %
+                                                         |         |         |-> Potencia maxima en W
+                                                         |         |-> Ancho de escaneo en centesimas de mm
+                                                         |-> Frecuencia de escaneo en Hz
+
+	RESPUESTA -> Misma respuesta que REF. 11 + Misma respuesta que REF. 9
+
+Pantalla de parametros -> Al presionar boton "Importar" con el boton "Parametro 2" seleccionado
+
+	Nota: Los parametros que aparecen en la pantalla son estos.
+	
+		Frecuencia de escaneo = 50 Hz
+		Ancho de escaneo = 3.00 mm
+		Potencia maxima = 500 W
+		Ciclo de trabajo = 100 %
+		Frecuencia = 2000 Hz
+
+	COMANDO   -> |0x5a|0xa5|0x10|0x83|0x10|0x50|0x06|0x00|0x32|0x01|0x2c|0x01|0xf4|0x00|0x64|0x00|0x00|0x07|0xd0|
+	                                                 --------- --------- --------- --------- -------------------
+                                                         |         |         |         |              |-> Frecuencia en Hz
+                                                         |         |         |         |-> Ciclo de trabajo en %
+                                                         |         |         |-> Potencia maxima en W
+                                                         |         |-> Ancho de escaneo en centesimas de mm
+                                                         |-> Frecuencia de escaneo en Hz
+
+	RESPUESTA -> Misma respuesta que REF. 12 + Misma respuesta que REF. 9
+
+Pantalla de parametros -> Al presionar el boton "Ayuda"
+
+	No envia ninguna trama
+	
+	Pantalla de ayuda -> Al presionar el boton "X" situado en la esquina superior derecha
+	
+		No envia ninguna trama
+
+Pantalla de parametros -> Al presionar el boton "Volver"
+
+	No envia ninguna trama
+
+Pantalla de ajustes -> Al presionar el boton "Modelo de cabeza de pistola"
+
+	No envia ninguna trama
+
+Pantalla de ajustes -> Ajuste de la activacion -> Al ponerlo en "Haga clic en"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0xd6|0x01|0x00|0x00|
+
+	REF. 13
+	RESPUESTA -> |0x5a|0xa5|0x35|0x82|0x12|0xc0|0x05|0xdc|0x00|0xc9|0x00|0xc8|0x00|0x6e|0x00|0xf9|0x02|0x8a|
+												--------- --------- --------- --------- --------- ---------
+													|         |         |         |         |         |-> Umbral de temperatura de accionamiento del motor en decimas de ºC
+													|         |         |         |         |-> Desplazamiento del centro del laser en centesimas de mm
+													|         |         |         |-> Correccion de la exploracion x 100
+													|         |         |-> Retraso de gas apagado en ms
+													|         |-> Retraso de gas abierto en ms
+													|-> Potencia del laser en W
+		
+				|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x1e|0x01|0xf4|0x00|0x00|0x00|0x50|0x01|0xf5|0x01|0xf6|
+				--------- ---------           --------- --------- --------- --------- ----------
+				     |         |                   |         |         |         |         |-> Tiempo progresivo de apagado del laser en ms
+				     |         |                   |         |         |         |-> Laser apagado en %
+				     |         |                   |         |         |-> Nivel de alarma de presion
+				     |         |                   |         |             |0x00|0x00| -> Bajo
+				     |         |                   |         |             |0x00|0x01| -> Alto
+				     |         |                   |         |-> Laser en tiempo progresivo en ms
+				     |         |                   |-> Potencia de arranque del laser en %
+				     |         |-> Nivel de alarma del enfriador
+				     |             |0x00|0x00| -> Bajo
+				     |             |0x00|0x01| -> Alto
+				     |-> Nivel de alarma laser
+					     |0x00|0x00| -> Bajo
+					     |0x00|0x01| -> Alto
+					 
+				|0x01|0xf7|0x00|0x01|0x00|0x09|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x02|0x00|0x01|0x02|0x44|
+			                         ---------                               --------- --------- ---------
+			                             |                                       |         |         |-> Umbral de temperatura del espejo protector en decimas de ºC
+							             |                                       |         |-> Ajuste de la activacion
+							             |                                       |             |0x00|0x00| -> Haga clic en
+							             |                                       |             |0x00|0x01| -> Doble clic
+										 |                                       |-> Modelo de cabeza de pistola
+										 |                                           |0x00|0x00| -> 150 mm de distancia focal, 30 mm de ancho
+										 |                                           |0x00|0x01| -> 400 mm de distancia focal, 60 mm de ancho
+										 |                                           |0x00|0x02| -> 800 mm de distancia focal, 120 mm de ancho
+				                         |-> Idioma
+				                             |0x00|0x00| -> Chino
+				                             |0x00|0x01| -> Ingles
+				                             |0x00|0x02| -> Coreano
+				                             |0x00|0x03| -> Ruso
+				                             |0x00|0x04| -> Chino tradicional
+				                             |0x00|0x05| -> Japones
+				                             |0x00|0x06| -> Aleman
+				                             |0x00|0x07| -> Frances
+				                             |0x00|0x08| -> Italiano
+				                             |0x00|0x09| -> Español
+				                             |0x00|0x0a| -> Portugues
+				                             |0x00|0x0b| -> Turco
+				                             |0x00|0x0c| -> Griego
+				                             |0x00|0x0d| -> Checo
+				                             |0x00|0x0e| -> Eslovaco
+				                             |0x00|0x0f| -> Polaco
+				                             |0x00|0x10| -> Tailandes
+				                             |0x00|0x11| -> Vietnamita
+				                             |0x00|0x12| -> Rumano
+					 
+				|0x02|0x4e|
+			     ---------
+			         |-> Umbral de temperatura del colimador en decimas de ºC
+
+Pantalla de ajustes -> Ajuste de la activacion -> Al ponerlo en "Doble clic"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0xd6|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 13
+
+Pantalla de ajustes -> Nivel de alarma laser -> Al ponerlo en "Alto"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0xc6|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 13 + Misma respuesta que REF. 9
+
+Pantalla de ajustes -> Nivel de alarma laser -> Al ponerlo en "Bajo"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0xc6|0x01|0x00|0x00|
+	RESPUESTA -> Misma respuesta que REF. 13 + Misma respuesta que REF. 9
+
+Pantalla de ajustes -> Nivel de alarma del enfriador -> Al ponerlo en "Alto"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0xc7|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 13 + Misma respuesta que REF. 9
+
+Pantalla de ajustes -> Nivel de alarma del enfriador -> Al ponerlo en "Bajo"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0xc7|0x01|0x00|0x00|
+	RESPUESTA -> Misma respuesta que REF. 13 + Misma respuesta que REF. 9
+
+Pantalla de ajustes -> Nivel de alarma de presion -> Al ponerlo en "Alto"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0xcb|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 13
+
+Pantalla de ajustes -> Nivel de alarma de presion -> Al ponerlo en "Bajo"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0xcb|0x01|0x00|0x00|
+	RESPUESTA -> Misma respuesta que REF. 13
+
+Pantalla de ajustes -> Al presionar el boton "Idioma"
+
+	No envia ninguna trama
+	
+	Nota: Abre un popup para seleccionar el idioma
+
+Pantalla de ajustes -> Idioma -> Al ponerlo en "Ingles"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0xd1|0x01|0x00|0x01|
+	                                                 ---------
+	                                                     |-> Idioma
+                                                             |0x00|0x00| -> Chino
+                                                             |0x00|0x01| -> Ingles
+                                                             |0x00|0x02| -> Coreano
+                                                             |0x00|0x03| -> Ruso
+                                                             |0x00|0x04| -> Chino tradicional
+                                                             |0x00|0x05| -> Japones
+                                                             |0x00|0x06| -> Aleman
+                                                             |0x00|0x07| -> Frances
+                                                             |0x00|0x08| -> Italiano
+                                                             |0x00|0x09| -> Español
+                                                             |0x00|0x0a| -> Portugues
+                                                             |0x00|0x0b| -> Turco
+                                                             |0x00|0x0c| -> Griego
+                                                             |0x00|0x0d| -> Checo
+                                                             |0x00|0x0e| -> Eslovaco
+                                                             |0x00|0x0f| -> Polaco
+                                                             |0x00|0x10| -> Tailandes
+                                                             |0x00|0x11| -> Vietnamita
+                                                             |0x00|0x12| -> Rumano
+
+	(al ponerlo en Chino)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x6f|
+	             |0x5a|0xa5|0x0b|0x82|0x00|0xb0|0x5a|0xa5|0x00|0x6d|0x0b|0x05|0x00|0x01|
+
+	(al ponerlo en Ingles)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x86|
+	
+	(al ponerlo en Coreano)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0x9d|
+
+	(al ponerlo en Ruso)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0xb4|
+
+	(al ponerlo en Chino tradicional)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x00|0xfa|
+
+	(al ponerlo en Japones)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x01|0x2f|
+
+	(al ponerlo en Aleman)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x01|0x64|
+
+	(al ponerlo en Frances)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x01|0x99|
+
+	(al ponerlo en Italiano)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x01|0xce|
+
+	(al ponerlo en Español)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x02|0x03|
+
+	(al ponerlo en Portugues)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x02|0x38|
+
+	(al ponerlo en Turco)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x02|0x6d|
+
+	(al ponerlo en Griego)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x02|0xa2|
+
+	(al ponerlo en Checo)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x02|0xd7|
+
+	(al ponerlo en Eslovaco)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x03|0x0c|
+
+	(al ponerlo en Polaco)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x03|0x41|
+
+	(al ponerlo en Tailandes)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x03|0x76|
+
+	(al ponerlo en Vietnamita)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x03|0xab|
+
+	(al ponerlo en Rumano)
+	RESPUESTA -> |0x5a|0xa5|0x07|0x82|0x00|0x84|0x5a|0x01|0x03|0xe0|
+
+Pantalla de ajustes -> Al presionar el boton "Guardar"
+
+	Nota: Los parametros que aparecen en la pantalla son estos.
+	
+		Potencia del laser = 1500 W
+		Retraso de gas abierto = 201 ms
+		Retraso de gas apagado = 200 ms
+		Correccion de la exploracion = 1.10
+		Desplazamiento del centro del laser = 0.51 mm
+		Potencia de arranque del laser = 30 %
+		Laser en tiempo progresivo = 500 ms
+		Laser apagado = 80 %
+		Tiempo progresivo de apagado del laser = 501 ms
+		Umbral de temperatura de accionamiento del motor = 65.0 ºC
+		Umbral de temperatura del espejo protector = 58.0 ºC
+		Umbral de temperatura del colimador = 59.0 ºC	
+		Ajuste de la activacion = Doble clic
+		Nivel de alarma laser = Bajo
+		Nivel de alarma del enfriador = Bajo
+		Nivel de alarma de presion = Bajo
+	
+	Nota: En la trama aparecen ciertos parametros que no aparecen en pantalla en este modo
+	      de funcionamiento, pero si en el modo de "Sistema de soldadura laser". Son estos.
+
+		Retraso del hilo de soldadura
+		Duracion de la soldadura por puntos
+		Intervalo de soldadura por puntos
+		Tipo de soldadura por puntos
+
+	COMANDO   -> |0x5a|0xa5|0x36|0x83|0x12|0xc0|0x19|0x05|0xdc|0x00|0xc9|0x00|0xc8|
+                                                     --------- --------- ---------
+										                 |         |         |-> Retraso de gas apagado en ms
+											             |         |-> Retraso de gas abierto en ms
+											             |-> Potencia del laser en W
+
+	             |0x00|0x6e|0x00|0x33|0x02|0x8a|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x1e|
+	              --------- --------- --------- --------- --------- --------- ---------
+	                  |         |         |         |         |         |         |-> Potencia de arranque del laser en %
+		              |         |         |         |         |         |-> Retraso del hilo de soldadura en ms
+		              |         |         |         |         |-> Nivel de alarma del enfriador
+		              |         |         |         |             |0x00|0x00| -> Bajo
+		              |         |         |         |             |0x00|0x01| -> Alto
+		              |         |         |         |-> Nivel de alarma laser
+		              |         |         |             |0x00|0x00| -> Bajo
+		              |         |         |             |0x00|0x01| -> Alto
+	                  |         |         |-> Umbral de temperatura de accionamiento del motor en decimas de ºC
+		              |         |-> Desplazamiento del centro del laser en centesimas de mm
+	                  |-> Coreccion de la exploracion x 100
+	
+	             |0x01|0xf4|0x00|0x00|0x00|0x50|0x01|0xf5|0x01|0xf6|0x01|0xf7|0x00|0x01|
+	              --------- --------- --------- --------- --------- --------- ---------
+	                  |         |         |         |         |         |         |-> Tipo de soldadura por puntos
+		              |         |         |         |         |         |             |0x00|0x01| -> Escamas de pescado
+		              |         |         |         |         |         |             |0x00|0x00| -> Intervalo
+	                  |         |         |         |         |         |-> Intervalo de soldadura por puntos en ms
+	                  |         |         |         |         |-> Duracion de la soldadura por puntos en ms
+	                  |         |         |         |-> Tiempo progresivo de apagado del laser en ms
+	                  |         |         |-> Laser apagado en %
+		              |         |-> Nivel de alarma de presion
+		              |             |0x00|0x00| -> Bajo
+		              |             |0x00|0x01| -> Alto
+	                  |-> Laser en tiempo progresivo en ms
+
+	             |0x00|0x09|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x01|0x02|0x44|
+	                                                                --------- ---------
+                                                                        |         |-> Umbral de temperatura del espejo protector en decimas de ºC
+                                                                        |-> Ajuste de la activacion
+                                                                            |0x00|0x00| -> Haga clic en
+                                                                            |0x00|0x01| -> Doble clic
+
+	             |0x02|0x4e|
+	              ---------
+	                  |-> Umbral de temperatura del colimador en decimas de ºC
+
+	RESPUESTA -> Misma respuesta que REF. 13 + Misma respuesta que REF. 9
+
+Pantalla de ajustes -> Al presionar el boton "Ayuda"
+
+	No envia ninguna trama
+	
+	Pantalla de ayuda -> Al presionar el boton "X" situado en la esquina superior derecha
+	
+		No envia ninguna trama
+	
+	Nota: En la pantalla de "Ayuda" existe ademas otro boton, llamado "Restablecimiento de fabrica"
+	      del que no hemos capturado la trama para no alterar los datos.
+
+Pantalla de ajustes -> Al presionar el boton "Volver"
+
+	No envia ninguna trama
+
+Pantalla de modelo de cabeza de pistola -> Al presionar el boton "150 mm de distancia focal, 30 mm de ancho"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0xd5|0x01|0x00|0x00|
+
+	REF. 14
+	RESPUESTA -> Misma respuesta que REF. 9
+	             + Misma respuesta que REF. 13
+				 + Misma respuesta que REF. 11
+				 + Misma respuesta que REF. 12
+                 + Misma respuesta que REF. 10
+
+                 |0x5a|0xa5|0x0f|0x82|0x10|0x70|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+                 |0x5a|0xa5|0x0f|0x82|0x10|0x80|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				 |0x5a|0xa5|0x0f|0x82|0x10|0x90|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				 |0x5a|0xa5|0x0f|0x82|0x10|0xa0|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				 |0x5a|0xa5|0x0f|0x82|0x10|0xb0|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				 |0x5a|0xa5|0x0f|0x82|0x10|0xc0|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+				 |0x5a|0xa5|0x0f|0x82|0x10|0xd0|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|0x00|
+
+Pantalla de modelo de cabeza de pistola -> Al presionar el boton "400 mm de distancia focal, 60 mm de ancho"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0xd5|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 14
+
+Pantalla de modelo de cabeza de pistola -> Al presionar el boton "800 mm de distancia focal, 120 mm de ancho"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x12|0xd5|0x01|0x00|0x02|
+	RESPUESTA -> Misma respuesta que REF. 14
+
+Pantalla de modelo de cabeza de pistola -> Al presionar el boton "Volver"
+
+	No envia ninguna trama
+
+Pantalla de monitor -> Al presionar el boton "Diagnostico"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x51|0x0a|0x01|0x00|0x01|
+	RESPUESTA -> Parece que no recibe ninguna trama a parte de las que se reciben repetidamente en la pantalla de monitor
+	
+	Pantalla de confirmacion de entrada en modo de diagnostico de apagado -> Al presionar el boton "Volver"
+	
+		COMANDO   -> |0x5a|0xa5|0x06|0x83|0x51|0x02|0x01|0x00|0x01|
+		RESPUESTA -> Parece que no recibe ninguna trama a parte de las que se reciben repetidamente en la pantalla de monitor
+
+	Pantalla de confirmacion de entrada en modo de diagnostico de apagado -> Al presionar el boton "Continuar"
+
+		COMANDO   -> |0x5a|0xa5|0x06|0x83|0x51|0x07|0x01|0x00|0x01|
+		
+		REF. 15
+		RESPUESTA -> Misma respuesta que REF. 8 (Nota: En pantalla no aparece la "Señal de habilitacion de la alimentacion del cable")
+
+Pantalla de monitor -> Al presionar el boton "Volver"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x51|0x03|0x01|0x00|0x01|
+	RESPUESTA -> No recibe ninguna trama
+
+Pantalla de diagnostico -> Al poner el control del interruptor "PWM" en "EN"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x11|0x30|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 15
+
+Pantalla de diagnostico -> Al poner el control del interruptor "PWM" en "OFF"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x11|0x30|0x01|0x00|0x00|
+	RESPUESTA -> Misma respuesta que REF. 15
+
+Pantalla de diagnostico -> Al poner el control del interruptor "Señal de habilitacion del laser" en "EN"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x11|0x31|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 15
+
+Pantalla de diagnostico -> Al poner el control del interruptor "Señal de habilitacion del laser" en "OFF"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x11|0x31|0x01|0x00|0x00|
+	RESPUESTA -> Misma respuesta que REF. 15
+
+Pantalla de diagnostico -> Al poner el control del interruptor "Señal de habilitacion de la valvula de gas" en "EN"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x11|0x32|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 15
+
+Pantalla de diagnostico -> Al poner el control del interruptor "Señal de habilitacion de la valvula de gas" en "OFF"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x11|0x32|0x01|0x00|0x00|
+	RESPUESTA -> Misma respuesta que REF. 15
+
+Pantalla de diagnostico -> Al poner el control del interruptor "Tension analogica" en "EN"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x11|0x33|0x01|0x00|0x01|
+	RESPUESTA -> Misma respuesta que REF. 15
+
+Pantalla de diagnostico -> Al poner el control del interruptor "Tension analogica" en "OFF"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x11|0x33|0x01|0x00|0x00|
+	RESPUESTA -> Misma respuesta que REF. 15
+
+Pantalla de diagnostico -> Al presionar el boton "Volver"
+
+	COMANDO   -> |0x5a|0xa5|0x06|0x83|0x51|0x08|0x01|0x00|0x01|
+	RESPUESTA -> Parece que no recibe ninguna trama a parte de las que se reciben repetidamente en la pantalla de monitor

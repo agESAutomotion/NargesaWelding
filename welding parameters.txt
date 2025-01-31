@@ -1,0 +1,21 @@
+Main Page (read only?)
+
+Scan speed (mm/s)	dword
+Scan width (mm)		dword
+Peak Power (W)		dword
+Duty cycle (%)		dword
+Frequecy (Hz)		dword
+
+Laser_Enable		bool: 0 = not enabled		1 = enabled (default)
+Red_Light(Laser guide) 	bool: 0 = dot 			1 = line (default)
+Welding_mode 		bool: 0 = spot welding		1 = continuous welding (default)	// Not available in cleaning mode
+Secure lock		bool: 0 = inative 		1 = active				// Not available in cleaning mode
+
+
+Laser Welding System Page (read/write)
+
+Scan speed (mm/s)	dword		2-6000 mm/s
+Scan width (mm)		dword		0-6 mm		10 <= scan speed/ (scan width * 2) <= 1000 if exceede, value will be set to the nearest limit
+Peak Power (W)		dword
+Duty cycle (%)		dword		0-100 %
+Frequecy (Hz)		dword		5-100K Hz	recomended 5-5K Hz
