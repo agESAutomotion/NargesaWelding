@@ -1,0 +1,26 @@
+1. continuity mode PWM 50hz 30%, laser power 3KW, peak power 3KW, rising, power laser starting 30%,  laser on progressive time 100ms
+2. continuity mode PWM 50hz 30%, laser power 3KW, peak power 3KW, falling, laser power off 20%, laser off progressive time 500ms
+3. same but with cursors.
+
+4. continuity mode PWM 50hz 30%, laser power 3KW, peak power 2KW, falling, laser power off 20%, laser off progressive time 500ms
+5. continuity mode PWM 50hz 30%, laser power 3KW, peak power 2KW, rising, power laser starting 30%,  laser on progressive time 100ms
+
+******spot mode --> Interval, PWM 50hz 30%, laser power 3KW, peak power 2KW, rising, power laser starting 30%,  
+	laser on progressive time 100ms
+	laser off progressive time 500ms
+	spot welding duration = 500 ms
+	spot welding interval = 900 ms
+
+6. graph measuring the spot welding duration
+7. graph measuring the spot welding interval
+
+*****spot mode --> Fish scale, PWM 50hz 30%, laser power 3KW, peak power 2KW, rising, power laser starting 30%, 
+	laser on progressive time 100ms
+	laser off progressive time 500ms
+	spot welding duration = 500 ms
+	spot welding interval = 900 ms
+
+8. graph measuring the first pulse composed of the laser progressive time + spot welding time
+9. graph measuring the ON cycle of the next pulse
+10. graph measuring the OFF cycle of the next pulse
+11. ignore

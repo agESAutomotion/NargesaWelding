@@ -1,4 +1,4 @@
-Main Page (read only?)
+*********Main Page (read only?)
 
 Scan speed (mm/s)	dword
 Scan width (mm)		dword
@@ -12,10 +12,41 @@ Welding_mode 		bool: 0 = spot welding		1 = continuous welding (default)	// Not a
 Secure lock		bool: 0 = inative 		1 = active				// Not available in cleaning mode
 
 
-Laser Welding System Page (read/write)
+*********Laser Welding System Page (read/write)
 
 Scan speed (mm/s)	dword		2-6000 mm/s
 Scan width (mm)		dword		0-6 mm		10 <= scan speed/ (scan width * 2) <= 1000 if exceede, value will be set to the nearest limit
 Peak Power (W)		dword
 Duty cycle (%)		dword		0-100 %
 Frequecy (Hz)		dword		5-100K Hz	recomended 5-5K Hz
+
+	only in Spot Welding Mode
+	Spot welding type	bool: 0 = interval	1 = fish scale
+	Spot welding duration (ms)	dword 
+	Spot welding interval (ms)	dword 
+	Wire(s) Feed (cm/min)		dword
+Database for welding parameters based on material type and thickness (welding parameters - see above)
+
+
+*********Settings page
+
+Laser Power (W)
+Open gas delay (ms)
+Close gas delay (ms)
+Laser Starting Power (%LaserPower)
+Laser On Progressive time (ms)
+Laser Off Power (%LaserPower) 
+Laser Off progressive time (ms)
+Welding wire delay (ms)
+Scan correction 
+Laser center offset (mm)
+Spot Welding duration (ms)			//only in spot welding mode
+Spot welding interval (ms)			//only in spot welding mode
+Motor drive temperature threshold (ºC)
+Protective mirror temperature threshold (ºC)
+Collimator temperature threshold (ºC)
+Spot welding type 
+Laser alarm level
+Chiller alarm level
+Pressure alarm level
+
